@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>引导页 - 梦想生活规划师</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .prototype-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background-color: white;
+            border-radius: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+        .status-bar {
+            height: 44px;
+            background-color: transparent;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #333;
+            font-size: 12px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+        }
+        .status-bar .time {
+            font-weight: 600;
+        }
+        .status-bar .icons {
+            display: flex;
+            gap: 5px;
+        }
+        .onboarding-container {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        .slides-container {
+            display: flex;
+            width: 400%;
+            height: 100%;
+            transition: transform 0.5s ease;
+        }
+        .slide {
+            width: 25%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px 30px 30px;
+            position: relative;
+        }
+        .slide:nth-child(1) {
+            background-color: #e3f2fd;
+        }
+        .slide:nth-child(2) {
+            background-color: #e8f5e9;
+        }
+        .slide:nth-child(3) {
+            background-color: #fff3e0;
+        }
+        .slide:nth-child(4) {
+            background-color: #f3e5f5;
+        }
+        .slide-image {
+            width: 250px;
+            height: 250px;
+            border-radius: 20px;
+            background-color: white;
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .slide-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .slide-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1976d2;
+            text-align: center;
+        }
+        .slide-description {
+            font-size: 16px;
+            text-align: center;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+        .indicators {
+            display: flex;
+            gap: 8px;
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        .indicator.active {
+            background-color: #1976d2;
+            width: 20px;
+            border-radius: 5px;
+        }
+        .action-button {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            width: 80%;
+            text-align: center;
+            text-decoration: none;
+        }
+        .action-button:hover {
+            background-color: #1565c0;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        .skip-button {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background-color: transparent;
+            color: #1976d2;
+            border: none;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .navigation {
+            width: 100%;
+            padding: 20px;
+            background-color: #f5f7fa;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+        }
+        .back-button, .home-button, .next-button {
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover, .home-button:hover, .next-button:hover {
+            background-color: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <div class="prototype-container">
+        <div class="phone-frame">
+            <div class="status-bar">
+                <div class="time">20:26</div>
+                <div class="icons">
+                    <div class="signal">📶</div>
+                    <div class="wifi">📡</div>
+                    <div class="battery">🔋</div>
+                </div>
+            </div>
+            <div class="onboarding-container">
+                <a href="login.html" class="skip-button">跳过</a>
+                <div class="slides-container" id="slides">
+                    <div class="slide">
+                        <div class="slide-image">
+                            <img src="https://img.freepik.com/free-vector/goal-achievement-concept-illustration_114360-5401.jpg" alt="设定梦想">
+                        </div>
+                        <h2 class="slide-title">设定您的梦想目标</h2>
+                        <p class="slide-description">创建梦想，设定目标和计划，让梦想不再只是一个想法。</p>
+                    </div>
+                    <div class="slide">
+                        <div class="slide-image">
+                            <img src="https://img.freepik.com/free-vector/business-team-brainstorm-idea-lightbulb-from-jigsaw-working-team-collaboration-enterprise-cooperation-colleagues-mutual-assistance-concept-pinkish-coral-bluevector-isolated-illustration_335657-1651.jpg" alt="拆解任务">
+                        </div>
+                        <h2 class="slide-title">拆解为可执行任务</h2>
+                        <p class="slide-description">将梦想分解为小任务，制定阶段性目标，循序渐进地实现。</p>
+                    </div>
+                    <div class="slide">
+                        <div class="slide-image">
+                            <img src="https://img.freepik.com/free-vector/teamwork-concept-landing-page_52683-20165.jpg" alt="社区互动">
+                        </div>
+                        <h2 class="slide-title">加入志同道合的社区</h2>
+                        <p class="slide-description">与追梦人互动交流，分享经验与感悟，互相鼓励支持。</p>
+                    </div>
+                    <div class="slide">
+                        <div class="slide-image">
+                            <img src="https://img.freepik.com/free-vector/achievement-concept-illustration_114360-883.jpg" alt="追踪进度">
+                        </div>
+                        <h2 class="slide-title">追踪进度实现梦想</h2>
+                        <p class="slide-description">记录每一步进展，见证自己的成长，最终达成梦想目标。</p>
+                    </div>
+                </div>
+                <div class="indicators">
+                    <div class="indicator active" onclick="goToSlide(0)"></div>
+                    <div class="indicator" onclick="goToSlide(1)"></div>
+                    <div class="indicator" onclick="goToSlide(2)"></div>
+                    <div class="indicator" onclick="goToSlide(3)"></div>
+                </div>
+                <a href="login.html" class="action-button" id="actionButton">下一步</a>
+            </div>
+        </div>
+        <div class="navigation">
+            <a href="splash.html" class="back-button">← 上一页</a>
+            <a href="index.html" class="home-button">返回目录</a>
+            <a href="login.html" class="next-button">下一页 →</a>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.getElementById('slides');
+        const indicators = document.querySelectorAll('.indicator');
+        const actionButton = document.getElementById('actionButton');
+
+        // 设置初始状态
+        updateSlide();
+
+        // 点击指示器切换幻灯片
+        function goToSlide(index) {
+            currentSlide = index;
+            updateSlide();
+        }
+
+        // 更新幻灯片和指示器状态
+        function updateSlide() {
+            slides.style.transform = `translateX(-${currentSlide * 25}%)`;
+            
+            indicators.forEach((indicator, index) => {
+                if (index === currentSlide) {
+                    indicator.classList.add('active');
+                } else {
+                    indicator.classList.remove('active');
+                }
+            });
+
+            // 最后一页更改按钮文本
+            if (currentSlide === 3) {
+                actionButton.textContent = '立即体验';
+            } else {
+                actionButton.textContent = '下一步';
+                actionButton.onclick = function() {
+                    if (currentSlide < 3) {
+                        currentSlide++;
+                        updateSlide();
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html> 

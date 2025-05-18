@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120px" height="120px" viewBox="0 0 120 120" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M109.167,24.667 L93.333,10.5 L30.5,10.5 L14.667,24.667 L14.667,96.833 C14.667,102.45 19.217,107 24.833,107 L99,107 C104.617,107 109.167,102.45 109.167,96.833 L109.167,24.667 Z M96.833,96.833 L27,96.833 L27,34.833 L96.833,34.833 L96.833,96.833 Z" fill="#CCCCCC" fill-rule="nonzero"></path>
+        <polygon fill="#DDDDDD" fill-rule="nonzero" points="61.833 76.5 86.667 55 61.833 55 37 55 37 76.5 37 86.667 61.833 86.667 86.667 86.667 86.667 76.5"></polygon>
+    </g>
+</svg> 

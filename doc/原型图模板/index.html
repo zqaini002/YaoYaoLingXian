@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>梦想生活规划师 - 原型图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f7fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #1976d2;
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            margin-bottom: 40px;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 18px;
+            font-weight: 300;
+            margin-bottom: 20px;
+        }
+        .description {
+            max-width: 800px;
+            margin: 0 auto 40px;
+            font-size: 16px;
+            line-height: 1.8;
+            text-align: center;
+        }
+        .section-title {
+            font-size: 24px;
+            margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e4e8;
+            color: #1976d2;
+        }
+        .prototype-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .prototype-card {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .prototype-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+        .card-image {
+            height: 180px;
+            background-color: #e0e0e0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .card-content {
+            padding: 20px;
+        }
+        .card-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #1976d2;
+        }
+        .card-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .card-link {
+            display: inline-block;
+            background-color: #1976d2;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        .card-link:hover {
+            background-color: #1565c0;
+        }
+        footer {
+            margin-top: 60px;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #e1e4e8;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>梦想生活规划师</h1>
+            <div class="subtitle">APP UI 原型设计展示</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="description">
+            "梦想生活规划师"是一款助力梦想成真的生活伴侣应用，帮助用户制定、管理和实现个人梦想目标。
+            以下是应用的主要界面原型设计，展示了核心功能和用户体验。
+        </div>
+
+        <h2 class="section-title">开始与登录</h2>
+        <div class="prototype-grid">
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/splash.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">启动页</h3>
+                    <p class="card-description">展示应用品牌标识和激励性标语，给用户留下第一印象。</p>
+                    <a href="splash.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/onboarding.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">引导页</h3>
+                    <p class="card-description">介绍应用的核心功能和价值，引导新用户了解使用方法。</p>
+                    <a href="onboarding.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/login.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">登录页</h3>
+                    <p class="card-description">用户登录界面，提供多种登录方式和注册入口。</p>
+                    <a href="login.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/register.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">注册页</h3>
+                    <p class="card-description">新用户注册界面，采用分步骤设计减轻表单填写负担。</p>
+                    <a href="register.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">主要功能页面</h2>
+        <div class="prototype-grid">
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/home.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">首页</h3>
+                    <p class="card-description">应用主页，展示用户梦想概览、今日任务和推荐内容。</p>
+                    <a href="home.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/dream_list.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">梦想列表</h3>
+                    <p class="card-description">展示用户所有梦想，支持分类查看和多种排序方式。</p>
+                    <a href="dream_list.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/dream_detail.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">梦想详情</h3>
+                    <p class="card-description">梦想的详细信息页，包含进度、任务、资源等内容。</p>
+                    <a href="dream_detail.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/task_list.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">任务列表</h3>
+                    <p class="card-description">用户的任务列表，按日期和状态分组显示。</p>
+                    <a href="task_list.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/task_detail.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">任务详情</h3>
+                    <p class="card-description">任务的详细信息及进度记录，支持子任务管理。</p>
+                    <a href="task_detail.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/community.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">社区</h3>
+                    <p class="card-description">社区动态页面，展示用户分享的梦想进展。</p>
+                    <a href="community.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/post_detail.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">动态详情</h3>
+                    <p class="card-description">社区动态的详细内容及评论互动区域。</p>
+                    <a href="post_detail.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/resource.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">资源中心</h3>
+                    <p class="card-description">学习资源和工具的分类展示与推荐。</p>
+                    <a href="resource.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">个人与设置</h2>
+        <div class="prototype-grid">
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/profile.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">个人中心</h3>
+                    <p class="card-description">用户个人信息、成就展示和动态列表。</p>
+                    <a href="profile.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/settings.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">设置</h3>
+                    <p class="card-description">应用设置页面，包含账号安全、隐私和通知设置等。</p>
+                    <a href="settings.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/statistics.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">数据统计</h3>
+                    <p class="card-description">通过图表直观展示梦想和任务的完成情况。</p>
+                    <a href="statistics.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+            <div class="prototype-card">
+                <div class="card-image" style="background-image: url('images/notification.png');"></div>
+                <div class="card-content">
+                    <h3 class="card-title">消息中心</h3>
+                    <p class="card-description">用户消息通知和提醒中心。</p>
+                    <a href="notification.html" class="card-link">查看原型</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>梦想生活规划师 &copy; 2025 版权所有</p>
+        </div>
+    </footer>
+</body>
+</html> 

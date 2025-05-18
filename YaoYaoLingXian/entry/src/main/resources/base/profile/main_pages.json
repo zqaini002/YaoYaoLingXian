@@ -1,0 +1,11 @@
+{
+  "src": [
+    "pages/Index",
+    "pages/task/TaskEditPage",
+    "pages/dream/DreamEditPage",
+    "pages/task/TaskProgressPage",
+    "pages/task/RecommendTasksPage",
+    "pages/dream/DreamDetailPage",
+    "pages/task/TaskDetailPage"
+  ]
+} 

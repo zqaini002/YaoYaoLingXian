@@ -1,0 +1,802 @@
+/**
+ * API服务类，用于封装对后端接口的调用
+ */
+
+import http from '@ohos.net.http';
+import { RequestMethod, ApiResponse, PageResponse, Dream, Task, DreamStats, QueryParams, HomePageData, RequestParams, Post, Comment } from '../model/CommonTypes';
+
+/**
+ * 帖子API数据结构
+ */
+interface PostApiData {
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+  posts: Post[];
+}
+
+/**
+ * 帖子API专用响应格式
+ */
+interface PostApiResponse {
+  code: number;
+  message: string;
+  data: PostApiData;
+}
+
+// API基础URL配置类型
+class ApiConfig {
+  // Android模拟器环境
+  readonly ANDROID_EMULATOR: string = 'http://10.0.2.2:8080/api';
+  // 真机环境，通过IP直接访问
+  readonly DEVICE: string = 'http://192.168.31.75:8080/api';
+  // 本地环境
+  readonly LOCAL: string = 'http://localhost:8080/api';
+  
+  // 获取当前环境的URL
+  getUrl(env: string): string {
+    switch (env) {
+      case 'ANDROID_EMULATOR':
+        return this.ANDROID_EMULATOR;
+      case 'DEVICE':
+        return this.DEVICE;
+      case 'LOCAL':
+      default:
+        return this.LOCAL;
+    }
+  }
+}
+
+// 创建API配置实例
+const apiConfig = new ApiConfig();
+
+// 当前使用的环境
+// 根据实际开发环境修改，可选值: LOCAL, DEVICE, ANDROID_EMULATOR
+const CURRENT_ENV = 'LOCAL'; // 修改为当前开发环境
+export const BASE_URL = apiConfig.getUrl(CURRENT_ENV);
+console.info(`当前API环境: ${CURRENT_ENV}, 基础URL: ${BASE_URL}`);
+
+// 请求超时时间
+export const TIMEOUT = 30000; // 增加超时时间到30秒
+
+// 状态码
+enum StatusCode {
+  SUCCESS = 200,
+  CREATED = 201,
+  NO_CONTENT = 204,
+  BAD_REQUEST = 400,
+  UNAUTHORIZED = 401,
+  FORBIDDEN = 403,
+  NOT_FOUND = 404,
+  SERVER_ERROR = 500
+}
+
+/**
+ * HTTP请求头接口
+ */
+export type HttpHeader = Record<string, string>;
+
+/**
+ * HTTP请求选项接口
+ */
+interface RequestOptions {
+  method: http.RequestMethod;
+  readTimeout: number;
+  connectTimeout: number;
+  extraData?: string | ArrayBuffer;
+  header: Record<string, string>;
+}
+
+/**
+ * 请求数据类型，支持各种基本类型的键值对
+ */
+export interface RequestData {
+  // 基本信息字段
+  id?: number;
+  userId?: number;
+  title?: string;
+  description?: string;
+  category?: string;
+  content?: string;
+  
+  // 状态字段
+  priority?: number;
+  status?: number;
+  type?: number;
+  completionRate?: number;
+  
+  // 时间相关字段
+  deadline?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  expectedDays?: number;
+  
+  // 其他属性
+  imageUrl?: string;
+  isPublic?: number;
+  
+  // 扩展字段，用于其他API
+  dreamId?: number;
+  taskId?: number;
+  postId?: number;
+  parentId?: number;
+  keyword?: string;
+  page?: number;
+  size?: number;
+  pageSize?: number;
+  days?: number;
+  tags?: string[];
+  // 图片数组
+  images?: string[];
+  imageUrls?: string[];
+}
+
+/**
+ * 任务查询参数接口
+ */
+interface TaskQueryParams extends QueryParams {
+  page: number;
+  size: number;
+  days?: number;
+}
+
+/**
+ * 空查询参数对象
+ */
+export const EmptyParams: QueryParams = {};
+
+/**
+ * 搜索查询参数
+ */
+export interface SearchParams extends QueryParams {
+  userId: number;
+  keyword: string;
+}
+
+/**
+ * 发送HTTP请求的通用方法
+ * 
+ * @param method HTTP方法
+ * @param endpoint API端点
+ * @param params 请求参数
+ * @param data 请求体数据
+ * @returns 响应数据
+ */
+export async function request<T>(method: RequestMethod, endpoint: string, params: QueryParams = {}, data: RequestData = {}): Promise<T> {
+  // 构建URL
+  let url = `${BASE_URL}${endpoint}`;
+
+  // 处理查询参数
+  if (Object.keys(params).length > 0) {
+    const queryParts: string[] = [];
+    for (const key of Object.keys(params)) {
+      const value = params[key];
+      if (value !== undefined && value !== null) {
+        queryParts.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
+      }
+    }
+    if (queryParts.length > 0) {
+      url += '?' + queryParts.join('&');
+    }
+  }
+
+  // 创建HTTP请求
+  const httpRequest = http.createHttp();
+  
+  try {
+    console.info(`发送请求: ${method} ${url}`);
+    
+    // 配置请求选项
+    const headers: HttpHeader = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    };
+    
+    const options: RequestOptions = {
+      method: method,
+      readTimeout: TIMEOUT,
+      connectTimeout: TIMEOUT,
+      extraData: method !== RequestMethod.GET ? JSON.stringify(data) : undefined,
+      header: headers
+    };
+
+    // 发送请求
+    const response = await httpRequest.request(url, options);
+    console.info(`收到响应: 状态码=${response.responseCode}, 结果类型=${typeof response.result}`);
+    
+    // 检查响应状态
+    if (response.responseCode >= 200 && response.responseCode < 300) {
+      // 解析响应数据
+      if (response.responseCode === StatusCode.NO_CONTENT) {
+        console.info('响应无内容');
+        return null as T;
+      }
+      
+      if (typeof response.result === 'string') {
+        console.info(`解析字符串响应: ${response.result.substring(0, 100)}...`);
+        return JSON.parse(response.result) as T;
+      }
+      
+      // 使用标准的方式将 ArrayBuffer 转换为字符串
+      if (response.result instanceof ArrayBuffer) {
+        console.info('解析ArrayBuffer响应');
+        const uint8Array = new Uint8Array(response.result);
+        let resultStr = '';
+        for (let i = 0; i < uint8Array.length; i++) {
+          resultStr += String.fromCharCode(uint8Array[i]);
+        }
+        return JSON.parse(resultStr) as T;
+      }
+      
+      // 处理其他情况
+      console.info('解析其他类型响应');
+      const resultObj = response.result as Object;
+      return resultObj as T;
+    } else {
+      // 处理错误响应
+      const errorMsg = `请求失败，状态码: ${response.responseCode}`;
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+  } catch (error) {
+    const errorMsg = `API请求错误: ${(error as Error).message}`;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  } finally {
+    // 释放请求资源
+    httpRequest.destroy();
+  }
+}
+
+/**
+ * 获取首页数据
+ * 
+ * @param userId 用户ID
+ * @returns 首页数据 - 返回HomePageData类型
+ */
+export function getHomePageData(userId: number): Promise<HomePageData> {
+  console.info(`正在请求首页数据，userId: ${userId}`);
+  try {
+    return request<HomePageData>(RequestMethod.GET, `/home/${userId}`);
+  } catch (error) {
+    console.error(`获取首页数据失败: ${(error instanceof Error ? error.message : String(error))}`);
+    throw new Error(`获取首页数据失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 获取用户梦想统计数据
+ * 
+ * @param userId 用户ID
+ * @returns 梦想统计数据
+ */
+export function getDreamStats(userId: number): Promise<DreamStats> {
+  try {
+    // 从后端API获取数据，API返回的是ApiResponse<DreamStats>格式
+    return request<ApiResponse<DreamStats>>(RequestMethod.GET, `/dreams/user/${userId}/stats`)
+      .then(response => {
+        // 处理ApiResponse，提取data字段并返回
+        if (response && response.data) {
+          console.info(`成功获取梦想统计: ${JSON.stringify(response.data)}`);
+          return response.data;
+        }
+        // 如果响应没有data字段，抛出错误
+        throw new Error('获取梦想统计数据失败: 响应格式错误');
+      });
+  } catch (error) {
+    console.error(`获取梦想统计数据失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`获取梦想统计数据失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 获取用户今日任务列表
+ * 
+ * @param userId 用户ID
+ * @param page 页码
+ * @param size 每页大小
+ * @returns 今日任务列表
+ */
+export function getTodayTasks(userId: number, page: number = 0, size: number = 5): Promise<PageResponse<Task>> {
+  const params: RequestData = { page, size };
+  try {
+    return request<PageResponse<Task>>(
+    RequestMethod.GET, 
+    `/tasks/user/${userId}/today`, 
+      params as QueryParams
+  );
+  } catch (error) {
+    console.error(`获取今日任务列表失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`获取今日任务列表失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 获取用户即将到期的任务列表
+ * 
+ * @param userId 用户ID
+ * @param days 天数
+ * @param page 页码
+ * @param size 每页大小
+ * @returns 即将到期的任务列表
+ */
+export function getUpcomingTasks(userId: number, days: number = 7, page: number = 0, size: number = 5): Promise<PageResponse<Task>> {
+  const params: RequestData = { days, page, size };
+  try {
+    return request<PageResponse<Task>>(
+    RequestMethod.GET, 
+    `/tasks/user/${userId}/upcoming`, 
+      params as QueryParams
+  );
+  } catch (error) {
+    console.error(`获取即将到期任务列表失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`获取即将到期任务列表失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 获取用户所有梦想列表
+ * 
+ * @param userId 用户ID
+ * @returns 梦想列表
+ */
+export function getDreamsByUserId(userId: number): Promise<Dream[]> {
+  try {
+    return request<Dream[]>(RequestMethod.GET, `/dreams/user/${userId}`);
+  } catch (error) {
+    console.error(`获取用户梦想列表失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`获取用户梦想列表失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 获取用户特定状态的梦想列表
+ * 
+ * @param userId 用户ID
+ * @param status 状态
+ * @returns 梦想列表
+ */
+export function getDreamsByStatus(userId: number, status: number): Promise<ApiResponse<Dream[]>> {
+  return request<ApiResponse<Dream[]>>(RequestMethod.GET, `/dreams/user/${userId}/status/${status}`);
+}
+
+/**
+ * 更新任务状态
+ * 
+ * @param taskId 任务ID
+ * @param status 新状态
+ * @returns 更新后的任务
+ */
+export function updateTaskStatus(taskId: number, status: number): Promise<Task> {
+  try {
+    return request<Task>(RequestMethod.PUT, `/tasks/${taskId}/status/${status}`);
+  } catch (error) {
+    console.error(`更新任务状态失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`更新任务状态失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 获取用户特定分类的梦想列表
+ * 
+ * @param userId 用户ID
+ * @param category 分类名称
+ * @returns 梦想列表
+ */
+export function getDreamsByUserIdAndCategory(userId: number, category: string): Promise<Dream[]> {
+  try {
+    return request<Dream[]>(RequestMethod.GET, `/dreams/user/${userId}/category/${category}`);
+  } catch (error) {
+    console.error(`获取用户${category}分类梦想列表失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`获取用户${category}分类梦想列表失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 搜索用户的梦想
+ * 
+ * @param userId 用户ID
+ * @param keyword 搜索关键词
+ * @returns 梦想列表分页
+ */
+export function searchDreams(userId: number, keyword: string): Promise<PageResponse<Dream>> {
+  try {
+    const params: RequestData = { userId, keyword };
+    return request<PageResponse<Dream>>(RequestMethod.GET, `/dreams/search`, params as QueryParams);
+  } catch (error) {
+    console.error(`搜索梦想失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`搜索梦想失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 创建新梦想
+ * 
+ * @param dream 梦想数据
+ * @returns 创建的梦想
+ */
+export function createDream(dream: Dream): Promise<Dream> {
+  console.info(`开始创建梦想: ${dream.title}`);
+  try {
+    // 转换为符合请求数据类型的对象
+    const requestData: RequestData = {
+      userId: dream.userId,
+      title: dream.title,
+      description: dream.description,
+      category: dream.category,
+      priority: dream.priority,
+      status: dream.status,
+      completionRate: dream.completionRate,
+      deadline: dream.deadline,
+      imageUrl: dream.imageUrl,
+      isPublic: dream.isPublic,
+      expectedDays: dream.expectedDays,
+      // 确保后端不会因为tags为null而崩溃
+      tags: dream.tags || []
+    };
+    
+    console.info(`请求数据: ${JSON.stringify(requestData)}`);
+    return request<Dream>(RequestMethod.POST, `/dreams`, EmptyParams, requestData);
+  } catch (error) {
+    const errorMsg = `创建梦想失败: ${error instanceof Error ? error.message : String(error)}`;
+    console.error(errorMsg);
+    console.error(`梦想数据: ${JSON.stringify(dream)}`); // 记录失败时的梦想数据
+    
+    // 检查是否是后端dreamTags相关错误
+    const errorString = String(error);
+    if (errorString.includes('NullPointerException') || 
+        errorString.includes('dreamTags') || 
+        errorString.includes('stream()')) {
+      throw new Error(`服务器处理标签时出错 (dreamTags为null): ${errorString}`);
+    }
+    
+    throw new Error(errorMsg);
+  }
+}
+
+/**
+ * 更新梦想
+ * 
+ * @param id 梦想ID
+ * @param dream 梦想数据
+ * @returns 更新后的梦想
+ */
+export function updateDream(id: number, dream: Dream): Promise<Dream> {
+  console.info(`开始更新梦想ID ${id}: ${dream.title}`);
+  try {
+    // 转换为符合请求数据类型的对象
+    const requestData: RequestData = {
+      id: dream.id,
+      userId: dream.userId,
+      title: dream.title,
+      description: dream.description,
+      category: dream.category,
+      priority: dream.priority,
+      status: dream.status,
+      completionRate: dream.completionRate,
+      deadline: dream.deadline,
+      imageUrl: dream.imageUrl,
+      isPublic: dream.isPublic,
+      expectedDays: dream.expectedDays,
+      // 确保后端不会因为tags为null而崩溃
+      tags: dream.tags || []
+    };
+    
+    console.info(`更新请求数据: ${JSON.stringify(requestData)}`);
+    return request<Dream>(RequestMethod.PUT, `/dreams/${id}`, EmptyParams, requestData);
+  } catch (error) {
+    const errorMsg = `更新梦想失败: ${error instanceof Error ? error.message : String(error)}`;
+    console.error(errorMsg);
+    console.error(`梦想ID: ${id}, 梦想数据: ${JSON.stringify(dream)}`); // 记录失败时的梦想数据
+    
+    // 检查是否是后端dreamTags相关错误
+    const errorString = String(error);
+    if (errorString.includes('NullPointerException') || 
+        errorString.includes('dreamTags') || 
+        errorString.includes('stream()')) {
+      throw new Error(`服务器处理标签时出错 (dreamTags为null): ${errorString}`);
+    }
+    
+    throw new Error(errorMsg);
+  }
+}
+
+/**
+ * 获取梦想详情
+ * 
+ * @param id 梦想ID
+ * @returns 梦想详情
+ */
+export function getDreamById(id: number): Promise<Dream> {
+  console.info(`开始获取梦想详情, ID: ${id}`);
+  try {
+    return request<Dream>(RequestMethod.GET, `/dreams/${id}`);
+  } catch (error) {
+    const errorMsg = `获取梦想详情失败: ${error instanceof Error ? error.message : String(error)}`;
+    console.error(errorMsg);
+    console.error(`梦想ID: ${id}`); // 记录失败时的梦想ID
+    throw new Error(errorMsg);
+  }
+}
+
+/**
+ * 获取梦想下的任务列表
+ * 
+ * @param dreamId 梦想ID
+ * @returns 任务列表
+ */
+export function getTasksByDreamId(dreamId: number): Promise<Task[]> {
+  try {
+    console.info(`获取梦想任务列表, dreamId: ${dreamId}`);
+    return request<Task[]>(RequestMethod.GET, `/tasks/dream/${dreamId}`);
+  } catch (error) {
+    console.error(`获取梦想任务列表失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`获取梦想任务列表失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 获取社区动态列表
+ * 
+ * @param page 页码
+ * @param size 每页大小
+ * @param type 动态类型: 0-推荐, 1-关注, 2-热门
+ * @returns 动态列表分页数据
+ */
+export function getPosts(page: number, size: number, type: number): Promise<PageResponse<Post>> {
+  try {
+    console.info(`获取社区动态, page: ${page}, size: ${size}, type: ${type}`);
+    
+    // 根据type映射到category参数
+    let category: string;
+    switch(type) {
+      case 0: 
+        category = "recommendation"; // 推荐
+        break;
+      case 1:
+        category = "following"; // 关注
+        break;
+      case 2:
+        category = "hot"; // 热门
+        break;
+      default:
+        category = "recommendation";
+    }
+    
+    const params: RequestData = {
+      page,
+      pageSize: size, // 改用pageSize参数名
+      category // 使用category参数替代type
+    };
+    
+    return request<PostApiResponse>(RequestMethod.GET, '/posts', params as QueryParams)
+      .then((apiResponse) => {
+        console.info(`收到社区动态响应: ${JSON.stringify(apiResponse).substring(0, 100)}...`);
+        
+        // 检查API响应是否有效
+        if (!apiResponse || !apiResponse.data || !apiResponse.data.posts) {
+          console.error('无效的API响应格式');
+          return {
+            content: [],
+            totalElements: 0,
+            totalPages: 0,
+            size: size,
+            number: page,
+            first: true,
+            last: true
+          };
+        }
+        
+        // 将API响应转换为PageResponse格式
+        const pageResponse: PageResponse<Post> = {
+          content: apiResponse.data.posts || [],
+          totalElements: apiResponse.data.totalItems || 0,
+          totalPages: apiResponse.data.totalPages || 0,
+          size: size,
+          number: apiResponse.data.currentPage || 0,
+          first: (apiResponse.data.currentPage || 0) === 0,
+          last: (apiResponse.data.currentPage || 0) >= (apiResponse.data.totalPages || 1) - 1
+        };
+        
+        // 处理数据，确保posts数组中的每个元素都有imageUrls字段
+        if (pageResponse.content) {
+          pageResponse.content.forEach(post => {
+            // 确保每个post对象都有imageUrls属性
+            if (!post.imageUrls) {
+              post.imageUrls = [];
+            }
+            
+            // 将后端返回的images字符串转换为前端需要的imageUrls数组
+            if (post.images && typeof post.images === 'string' && post.images.trim() !== '') {
+              post.imageUrls = post.images.split(',').filter(url => url && url.trim() !== '');
+            }
+            
+            console.info(`处理帖子: ID=${post.id}, 标题=${post.title}, 图片数=${post.imageUrls.length}`);
+          });
+        }
+        
+        console.info(`社区动态数据处理完成，共${pageResponse.content.length}条记录`);
+        return pageResponse;
+      });
+  } catch (error) {
+    console.error(`获取社区动态失败: ${error instanceof Error ? error.message : String(error)}`);
+    // 返回一个空的但结构完整的响应，避免UI崩溃
+    const emptyResponse: PageResponse<Post> = {
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      size: size,
+      number: page,
+      first: true,
+      last: true
+    };
+    return Promise.resolve(emptyResponse);
+  }
+}
+
+/**
+ * 获取动态详情
+ * 
+ * @param id 动态ID
+ * @returns 动态详情
+ */
+export function getPostById(id: number): Promise<Post> {
+  try {
+    console.info(`获取动态详情, id: ${id}`);
+    return request<Post>(RequestMethod.GET, `/posts/${id}`);
+  } catch (error) {
+    console.error(`获取动态详情失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`获取动态详情失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 点赞动态
+ * 
+ * @param id 动态ID
+ */
+export function likePost(id: number): Promise<void> {
+  try {
+    console.info(`点赞动态, id: ${id}`);
+    return request<void>(RequestMethod.POST, `/posts/${id}/like`);
+  } catch (error) {
+    console.error(`点赞动态失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`点赞动态失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 取消点赞动态
+ * 
+ * @param id 动态ID
+ */
+export function unlikePost(id: number): Promise<void> {
+  try {
+    console.info(`取消点赞动态, id: ${id}`);
+    return request<void>(RequestMethod.DELETE, `/posts/${id}/like`);
+  } catch (error) {
+    console.error(`取消点赞动态失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`取消点赞动态失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 获取动态评论
+ * 
+ * @param id 动态ID
+ * @param page 页码
+ * @param size 每页大小
+ * @returns 评论列表
+ */
+export function getPostComments(id: number, page: number, size: number): Promise<Comment[]> {
+  try {
+    console.info(`获取动态评论, id: ${id}, page: ${page}, size: ${size}`);
+    
+    const params: RequestData = {
+      page,
+      size
+    };
+    
+    return request<Comment[]>(RequestMethod.GET, `/posts/${id}/comments`, params as QueryParams);
+  } catch (error) {
+    console.error(`获取动态评论失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`获取动态评论失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 发表评论
+ * 
+ * @param postId 动态ID
+ * @param comment 评论内容
+ * @returns 创建的评论
+ */
+export function createComment(postId: number, comment: Comment): Promise<Comment> {
+  try {
+    console.info(`发表评论, postId: ${postId}, content: ${comment.content}`);
+    // 将comment转为RequestData对象
+    const requestData: RequestData = {
+      id: comment.id,
+      postId: comment.postId,
+      userId: comment.userId,
+      content: comment.content,
+      parentId: comment.parentId
+    };
+    return request<Comment>(RequestMethod.POST, `/posts/${postId}/comments`, EmptyParams, requestData);
+  } catch (error) {
+    console.error(`发表评论失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`发表评论失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 发布动态
+ * 
+ * @param post 动态内容
+ * @returns 创建的动态
+ */
+export function createPost(post: Post): Promise<Post> {
+  try {
+    console.info(`发布动态, title: ${post.title}`);
+    // 将post转为RequestData对象
+    const requestData: RequestData = {
+      id: post.id,
+      userId: post.userId,
+      dreamId: post.dreamId,
+      title: post.title,
+      content: post.content
+    };
+    return request<Post>(RequestMethod.POST, '/posts', EmptyParams, requestData);
+  } catch (error) {
+    console.error(`发布动态失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`发布动态失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 获取用户动态
+ * 
+ * @param userId 用户ID
+ * @param page 页码
+ * @param size 每页大小
+ * @returns 动态列表分页数据
+ */
+export function getUserPosts(userId: number, page: number, size: number): Promise<PageResponse<Post>> {
+  try {
+    console.info(`获取用户动态, userId: ${userId}, page: ${page}, size: ${size}`);
+    
+    const params: RequestData = {
+      page,
+      size
+    };
+    
+    return request<PageResponse<Post>>(RequestMethod.GET, `/posts/user/${userId}`, params as QueryParams);
+  } catch (error) {
+    console.error(`获取用户动态失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`获取用户动态失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 获取梦想相关动态
+ * 
+ * @param dreamId 梦想ID
+ * @param page 页码
+ * @param size 每页大小
+ * @returns 动态列表分页数据
+ */
+export function getDreamPosts(dreamId: number, page: number, size: number): Promise<PageResponse<Post>> {
+  try {
+    console.info(`获取梦想相关动态, dreamId: ${dreamId}, page: ${page}, size: ${size}`);
+    
+    const params: RequestData = {
+      page,
+      size
+    };
+    
+    return request<PageResponse<Post>>(RequestMethod.GET, `/posts/dream/${dreamId}`, params as QueryParams);
+  } catch (error) {
+    console.error(`获取梦想相关动态失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`获取梦想相关动态失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
