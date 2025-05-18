@@ -52,7 +52,7 @@ const apiConfig = new ApiConfig();
 
 // 当前使用的环境
 // 根据实际开发环境修改，可选值: LOCAL, DEVICE, ANDROID_EMULATOR
-const CURRENT_ENV = 'LOCAL'; // 修改为当前开发环境
+const CURRENT_ENV = 'ANDROID_EMULATOR'; // 修改为当前开发环境
 export const BASE_URL = apiConfig.getUrl(CURRENT_ENV);
 console.info(`当前API环境: ${CURRENT_ENV}, 基础URL: ${BASE_URL}`);
 
