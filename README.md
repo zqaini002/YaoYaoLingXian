@@ -15,8 +15,6 @@
 
 ## 💎 核心价值
 
-## 💎 核心价值
-
 - **🎯 梦想管理**：帮助用户系统化管理个人梦想和目标
 - **📝 任务拆解**：将梦想分解为可执行的小任务，便于逐步实现
 - **📊 进度追踪**：直观展示梦想实现的进度和成果
@@ -31,10 +29,12 @@ graph LR
     A[ArkTS] --> B[HarmonyOS]
     C[ArkUI-X] --> B
     D[HTTP API] --> E[后端服务]
+    F[图片URL处理] --> D
 ```
 
 - 🔹 **ArkTS**（基于鸿蒙HarmonyOS生态）
 - 🔹 **ArkUI-X 5.0.4.106**
+- 🔹 **智能图片URL处理**（自动适配不同环境）
 
 ### 后端技术栈
 ```mermaid
@@ -43,6 +43,7 @@ graph TB
     C[JPA/Hibernate] --> B
     A --> D[REST API]
     E[Java 17] --> A
+    F[文件上传服务] --> A
 ```
 
 - 🔹 **Java 17**
@@ -51,12 +52,14 @@ graph TB
 - 🔹 **MySQL 数据库**
 - 🔹 **SpringDoc**（API文档）
 - 🔹 **Lombok**
+- 🔹 **文件上传与存储系统**
 
 ### 项目规范
 - 🔹 阿里巴巴Java开发手册
 - 🔹 统一异常处理
 - 🔹 RESTful API设计
 - 🔹 数据校验和安全处理
+- 🔹 环境适配与URL处理策略
 
 ## 📱 功能模块
 
@@ -70,6 +73,7 @@ graph TB
 - 梦想分类与标签
 - 梦想进度跟踪
 - 梦想优先级与截止日期设置
+- 梦想图片上传与展示
 
 ### 3. ✅ 任务系统
 - 任务创建与编辑
@@ -82,6 +86,7 @@ graph TB
 - 点赞、评论功能
 - 关注好友动态
 - 成就分享与激励
+- 图片分享与展示
 
 ### 5. 📖 资源中心
 - 学习资源推荐
@@ -102,6 +107,11 @@ YaoYaoLingXian/
   │   ├── src/              # 源代码
   │   │   ├── main/         # 主要代码
   │   │   │   ├── ets/      # ArkTS代码
+  │   │   │   │   ├── services/  # 服务层
+  │   │   │   │   │   ├── ApiService.ets  # API服务
+  │   │   │   │   ├── pages/     # 页面组件
+  │   │   │   │   ├── model/     # 数据模型
+  │   │   │   │   ├── utils/     # 工具类
   │   │   │   ├── resources/ # 资源文件
   ├── AppScope/             # 应用范围配置
   ├── oh_modules/           # 依赖模块
@@ -132,15 +142,48 @@ Backend/
 | 表名 | 描述 | 主要字段 |
 |------|------|---------|
 | `user` | 用户信息 | id, username, nickname, avatar, email |
-| `dream` | 梦想目标 | id, user_id, title, description, category |
+| `dream` | 梦想目标 | id, user_id, title, description, category, image_url |
 | `task` | 任务 | id, dream_id, title, status, priority |
-| `progress` | 进度记录 | id, dream_id, completion_rate, updated_at |
+| `progress` | 进度记录 | id, dream_id, completion_rate, updated_at, images |
 | `resource` | 资源 | id, title, url, type, description |
 | `tag` | 标签 | id, name, category |
 | `post` | 社区动态 | id, user_id, content, images, created_at |
 | `comment` | 评论 | id, post_id, user_id, content |
 | `like` | 点赞 | id, user_id, post_id, created_at |
 | `follow` | 关注关系 | id, user_id, follow_id |
+
+## 🌐 多环境支持
+
+应用支持多种环境配置，通过智能URL处理实现跨环境资源访问：
+
+```typescript
+// 不同环境的API基础URL配置
+class ApiConfig {
+  readonly ANDROID_EMULATOR: string = 'http://10.0.2.2:8080/api';
+  readonly DEVICE: string = 'http://192.168.31.75:8080/api';
+  readonly LOCAL: string = 'http://localhost:8080/api';
+}
+
+// 智能图片URL处理，确保在不同环境中正确访问图片资源
+export function processImageUrl(url: string): string {
+  if (!url) return '';
+  
+  // 处理相对路径
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return `${BASE_URL}/${url}`;
+  }
+  
+  // 处理包含localhost的URL
+  if (url.includes('localhost')) {
+    const urlParts = url.split('/api/');
+    if (urlParts.length > 1) {
+      return `${BASE_URL}/${urlParts[1]}`;
+    }
+  }
+  
+  return url;
+}
+```
 
 ## 🚀 开发与部署流程
 
@@ -169,6 +212,7 @@ graph LR
 - ✓ 代码审查
 - ✓ 性能测试
 - ✓ 安全漏洞扫描
+- ✓ 跨环境兼容性测试
 
 ## 👥 项目团队
 - 👨‍💼 产品经理：七七负责用户界面与交互设计

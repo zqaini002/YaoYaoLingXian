@@ -2,6 +2,9 @@ server:
   port: 8080
   servlet:
     context-path: /api
+  tomcat:
+    connection-timeout: 120000  # 增加连接超时时间
+    max-http-form-post-size: 15MB  # 增加表单提交大小
 
 spring:
   application:
@@ -45,8 +48,11 @@ spring:
   # 限制上传文件大小
   servlet:
     multipart:
+      enabled: true
       max-file-size: 10MB
-      max-request-size: 10MB
+      max-request-size: 15MB
+      file-size-threshold: 2MB
+      resolve-lazily: true  # 延迟解析，可以减少连接中断问题
 
 # 链路追踪
 management:

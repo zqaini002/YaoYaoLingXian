@@ -121,6 +121,7 @@ export interface Task {
  * 社区帖子模型
  */
 export interface Post {
+  userAvatar(userAvatar: undefined): undefined;
   id: number;
   userId: number;
   dreamId?: number;

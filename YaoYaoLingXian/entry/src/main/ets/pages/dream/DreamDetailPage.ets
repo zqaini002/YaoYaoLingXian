@@ -51,14 +51,45 @@ struct DreamDetailPage {
       this.errorMessage = null;
       
       // 加载梦想详情
-      this.dream = await ApiService.getDreamById(this.dreamId);
-      console.info(`成功获取梦想详情, ID: ${this.dreamId}, 标题: ${this.dream.title}`);
-      
-      // 加载梦想相关任务
-      await this.loadTasks();
+      await this.fetchDreamDetail();
     } catch (error) {
       console.error(`加载梦想详情失败: ${error instanceof Error ? error.message : String(error)}`);
       this.errorMessage = `加载数据失败: ${error instanceof Error ? error.message : String(error)}`;
+    } finally {
+      this.isLoading = false;
+    }
+  }
+  
+  /**
+   * 获取梦想详情
+   */
+  private async fetchDreamDetail() {
+    try {
+      this.isLoading = true;
+      
+      // 先通过API获取梦想详情
+      console.info(`获取梦想详情, ID: ${this.dreamId}`);
+      const dream: Dream = await ApiService.getDreamById(this.dreamId);
+      
+      console.info(`获取到梦想详情: ${JSON.stringify(dream)}`);
+      this.dream = dream;
+      
+      // 如果需要显示任务，再获取任务列表
+      if (this.showTasks) {
+        console.info(`获取梦想相关任务`);
+        const tasks: Task[] = await ApiService.getTasksByDreamId(this.dreamId);
+        
+        console.info(`获取到任务列表: ${JSON.stringify(tasks)}`);
+        this.tasks = tasks;
+        
+        // 自动切换到任务标签页
+        if (this.tasks.length > 0) {
+          this.activeTab = 1;
+        }
+      }
+    } catch (error) {
+      console.error(`获取梦想详情失败: ${error instanceof Error ? error.message : String(error)}`);
+      this.errorMessage = `获取数据失败: ${error instanceof Error ? error.message : String(error)}`;
     } finally {
       this.isLoading = false;
     }
@@ -96,7 +127,7 @@ struct DreamDetailPage {
         console.warn(`获取梦想任务列表返回空值`);
         this.tasks = [];
       }
-    } catch (error) {
+    }  catch (error)  {
       console.error(`加载梦想任务失败: ${error instanceof Error ? error.message : String(error)}`);
       // 不设置错误消息，保持任务列表为空
       this.tasks = [];

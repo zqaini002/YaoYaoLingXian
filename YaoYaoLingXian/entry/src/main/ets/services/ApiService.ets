@@ -56,6 +56,32 @@ const CURRENT_ENV = 'ANDROID_EMULATOR'; // 修改为当前开发环境
 export const BASE_URL = apiConfig.getUrl(CURRENT_ENV);
 console.info(`当前API环境: ${CURRENT_ENV}, 基础URL: ${BASE_URL}`);
 
+/**
+ * 处理图片URL，转换为当前环境可访问的URL
+ * 
+ * @param url 后端返回的URL
+ * @returns 处理后可访问的URL
+ */
+export function processImageUrl(url: string): string {
+  if (!url) return '';
+  
+  // 如果是相对路径（不包含http或https），则添加BASE_URL
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return `${BASE_URL}/${url}`;
+  }
+  
+  // 如果包含localhost，替换为当前环境URL
+  if (url.includes('localhost')) {
+    // 提取相对路径
+    const urlParts = url.split('/api/');
+    if (urlParts.length > 1) {
+      return `${BASE_URL}/${urlParts[1]}`;
+    }
+  }
+  
+  return url;
+}
+
 // 请求超时时间
 export const TIMEOUT = 30000; // 增加超时时间到30秒
 
@@ -114,6 +140,12 @@ export interface RequestData {
   // 其他属性
   imageUrl?: string;
   isPublic?: number;
+  
+  // 图片上传相关
+  base64Image?: string;
+  fileName?: string;
+  fileContent?: string; // 文件Base64内容
+  file?: string; // 文件路径或名称
   
   // 扩展字段，用于其他API
   dreamId?: number;
@@ -436,7 +468,14 @@ export function createDream(dream: Dream): Promise<Dream> {
     };
     
     console.info(`请求数据: ${JSON.stringify(requestData)}`);
-    return request<Dream>(RequestMethod.POST, `/dreams`, EmptyParams, requestData);
+    return request<Dream>(RequestMethod.POST, `/dreams`, EmptyParams, requestData)
+      .then(newDream => {
+        // 处理图片URL
+        if (newDream && newDream.imageUrl) {
+          newDream.imageUrl = processImageUrl(newDream.imageUrl);
+        }
+        return newDream;
+      });
   } catch (error) {
     const errorMsg = `创建梦想失败: ${error instanceof Error ? error.message : String(error)}`;
     console.error(errorMsg);
@@ -462,11 +501,10 @@ export function createDream(dream: Dream): Promise<Dream> {
  * @returns 更新后的梦想
  */
 export function updateDream(id: number, dream: Dream): Promise<Dream> {
-  console.info(`开始更新梦想ID ${id}: ${dream.title}`);
+  console.info(`开始更新梦想: ${dream.title}`);
   try {
     // 转换为符合请求数据类型的对象
     const requestData: RequestData = {
-      id: dream.id,
       userId: dream.userId,
       title: dream.title,
       description: dream.description,
@@ -482,12 +520,19 @@ export function updateDream(id: number, dream: Dream): Promise<Dream> {
       tags: dream.tags || []
     };
     
-    console.info(`更新请求数据: ${JSON.stringify(requestData)}`);
-    return request<Dream>(RequestMethod.PUT, `/dreams/${id}`, EmptyParams, requestData);
+    console.info(`请求数据: ${JSON.stringify(requestData)}`);
+    return request<Dream>(RequestMethod.PUT, `/dreams/${id}`, EmptyParams, requestData)
+      .then(updatedDream => {
+        // 处理图片URL
+        if (updatedDream && updatedDream.imageUrl) {
+          updatedDream.imageUrl = processImageUrl(updatedDream.imageUrl);
+        }
+        return updatedDream;
+      });
   } catch (error) {
     const errorMsg = `更新梦想失败: ${error instanceof Error ? error.message : String(error)}`;
     console.error(errorMsg);
-    console.error(`梦想ID: ${id}, 梦想数据: ${JSON.stringify(dream)}`); // 记录失败时的梦想数据
+    console.error(`梦想数据: ${JSON.stringify(dream)}`); // 记录失败时的梦想数据
     
     // 检查是否是后端dreamTags相关错误
     const errorString = String(error);
@@ -502,6 +547,57 @@ export function updateDream(id: number, dream: Dream): Promise<Dream> {
 }
 
 /**
+ * 上传图片（Base64格式）
+ * 
+ * @param data 包含Base64图片数据和文件名的对象
+ * @returns 上传后的图片URL和文件名
+ */
+export interface UploadImageParams {
+  base64Image: string;
+  fileName: string;
+}
+
+interface UploadImageResponse {
+  url: string;
+  filename: string;
+}
+
+export async function uploadImage(data: UploadImageParams): Promise<UploadImageResponse> {
+  try {
+    console.info('准备上传图片，文件名：', data.fileName);
+    
+    // 构建图片上传请求数据
+    const requestData: RequestData = {
+      fileContent: data.base64Image, // 使用fileContent字段名替代base64Image
+      file: data.fileName, // 添加file字段，后端需要这个字段
+      fileName: data.fileName // 保留fileName字段
+    };
+    
+    // 调用API上传图片
+    const response = await request<ApiResponse<UploadImageResponse>>(
+      RequestMethod.POST,
+      '/files/upload',
+      {},
+      requestData
+    );
+    
+    console.info('图片上传成功，服务器返回：', JSON.stringify({url: response.data.url, filename: response.data.filename}));
+    
+    // 处理图片URL，确保能在当前环境正确访问
+    const processedUrl = processImageUrl(response.data.url);
+    console.info('处理后的图片URL:', processedUrl);
+    
+    return {
+      url: processedUrl, // 返回处理后的URL
+      filename: response.data.filename
+    };
+  } catch (error) {
+    console.error('图片上传失败：', error);
+    throw new Error(error instanceof Error ? error.message : String(error));
+  }
+}
+
+/**
  * 获取梦想详情
  * 
  * @param id 梦想ID
@@ -510,11 +606,19 @@ export function updateDream(id: number, dream: Dream): Promise<Dream> {
 export function getDreamById(id: number): Promise<Dream> {
   console.info(`开始获取梦想详情, ID: ${id}`);
   try {
-    return request<Dream>(RequestMethod.GET, `/dreams/${id}`);
+    return request<Dream>(RequestMethod.GET, `/dreams/${id}`)
+      .then(dreamDetail => {
+        // 处理图片URL
+        if (dreamDetail && dreamDetail.imageUrl) {
+          dreamDetail.imageUrl = processImageUrl(dreamDetail.imageUrl);
+          console.info(`梦想图片URL处理后: ${dreamDetail.imageUrl}`);
+        }
+        return dreamDetail;
+      });
   } catch (error) {
     const errorMsg = `获取梦想详情失败: ${error instanceof Error ? error.message : String(error)}`;
     console.error(errorMsg);
-    console.error(`梦想ID: ${id}`); // 记录失败时的梦想ID
+    console.error(`梦想ID: ${id}`);
     throw new Error(errorMsg);
   }
 }
@@ -530,8 +634,9 @@ export function getTasksByDreamId(dreamId: number): Promise<Task[]> {
     console.info(`获取梦想任务列表, dreamId: ${dreamId}`);
     return request<Task[]>(RequestMethod.GET, `/tasks/dream/${dreamId}`);
   } catch (error) {
-    console.error(`获取梦想任务列表失败: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error(`获取梦想任务列表失败: ${error instanceof Error ? error.message : String(error)}`);
+    const errorMsg = `获取梦想任务列表失败: ${error instanceof Error ? error.message : String(error)}`;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
   }
 }
 
@@ -571,12 +676,12 @@ export function getPosts(page: number, size: number, type: number): Promise<Page
     
     return request<PostApiResponse>(RequestMethod.GET, '/posts', params as QueryParams)
       .then((apiResponse) => {
-        console.info(`收到社区动态响应: ${JSON.stringify(apiResponse).substring(0, 100)}...`);
+        console.info(`收到社区动态响应`);
         
         // 检查API响应是否有效
         if (!apiResponse || !apiResponse.data || !apiResponse.data.posts) {
           console.error('无效的API响应格式');
-          return {
+          const emptyResponse: PageResponse<Post> = {
             content: [],
             totalElements: 0,
             totalPages: 0,
@@ -585,6 +690,7 @@ export function getPosts(page: number, size: number, type: number): Promise<Page
             first: true,
             last: true
           };
+          return emptyResponse;
         }
         
         // 将API响应转换为PageResponse格式
@@ -610,8 +716,6 @@ export function getPosts(page: number, size: number, type: number): Promise<Page
             if (post.images && typeof post.images === 'string' && post.images.trim() !== '') {
               post.imageUrls = post.images.split(',').filter(url => url && url.trim() !== '');
             }
-            
-            console.info(`处理帖子: ID=${post.id}, 标题=${post.title}, 图片数=${post.imageUrls.length}`);
           });
         }
         
@@ -635,22 +739,6 @@ export function getPosts(page: number, size: number, type: number): Promise<Page
 }
 
 /**
- * 获取动态详情
- * 
- * @param id 动态ID
- * @returns 动态详情
- */
-export function getPostById(id: number): Promise<Post> {
-  try {
-    console.info(`获取动态详情, id: ${id}`);
-    return request<Post>(RequestMethod.GET, `/posts/${id}`);
-  } catch (error) {
-    console.error(`获取动态详情失败: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error(`获取动态详情失败: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-
-/**
  * 点赞动态
  * 
  * @param id 动态ID
@@ -660,8 +748,9 @@ export function likePost(id: number): Promise<void> {
     console.info(`点赞动态, id: ${id}`);
     return request<void>(RequestMethod.POST, `/posts/${id}/like`);
   } catch (error) {
-    console.error(`点赞动态失败: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error(`点赞动态失败: ${error instanceof Error ? error.message : String(error)}`);
+    const errorMsg = `点赞动态失败: ${error instanceof Error ? error.message : String(error)}`;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
   }
 }
 
@@ -675,8 +764,9 @@ export function unlikePost(id: number): Promise<void> {
     console.info(`取消点赞动态, id: ${id}`);
     return request<void>(RequestMethod.DELETE, `/posts/${id}/like`);
   } catch (error) {
-    console.error(`取消点赞动态失败: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error(`取消点赞动态失败: ${error instanceof Error ? error.message : String(error)}`);
+    const errorMsg = `取消点赞动态失败: ${error instanceof Error ? error.message : String(error)}`;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
   }
 }
 
@@ -699,8 +789,9 @@ export function getPostComments(id: number, page: number, size: number): Promise
     
     return request<Comment[]>(RequestMethod.GET, `/posts/${id}/comments`, params as QueryParams);
   } catch (error) {
-    console.error(`获取动态评论失败: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error(`获取动态评论失败: ${error instanceof Error ? error.message : String(error)}`);
+    const errorMsg = `获取动态评论失败: ${error instanceof Error ? error.message : String(error)}`;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
   }
 }
 
@@ -724,79 +815,8 @@ export function createComment(postId: number, comment: Comment): Promise<Comment
     };
     return request<Comment>(RequestMethod.POST, `/posts/${postId}/comments`, EmptyParams, requestData);
   } catch (error) {
-    console.error(`发表评论失败: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error(`发表评论失败: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-
-/**
- * 发布动态
- * 
- * @param post 动态内容
- * @returns 创建的动态
- */
-export function createPost(post: Post): Promise<Post> {
-  try {
-    console.info(`发布动态, title: ${post.title}`);
-    // 将post转为RequestData对象
-    const requestData: RequestData = {
-      id: post.id,
-      userId: post.userId,
-      dreamId: post.dreamId,
-      title: post.title,
-      content: post.content
-    };
-    return request<Post>(RequestMethod.POST, '/posts', EmptyParams, requestData);
-  } catch (error) {
-    console.error(`发布动态失败: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error(`发布动态失败: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-
-/**
- * 获取用户动态
- * 
- * @param userId 用户ID
- * @param page 页码
- * @param size 每页大小
- * @returns 动态列表分页数据
- */
-export function getUserPosts(userId: number, page: number, size: number): Promise<PageResponse<Post>> {
-  try {
-    console.info(`获取用户动态, userId: ${userId}, page: ${page}, size: ${size}`);
-    
-    const params: RequestData = {
-      page,
-      size
-    };
-    
-    return request<PageResponse<Post>>(RequestMethod.GET, `/posts/user/${userId}`, params as QueryParams);
-  } catch (error) {
-    console.error(`获取用户动态失败: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error(`获取用户动态失败: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-
-/**
- * 获取梦想相关动态
- * 
- * @param dreamId 梦想ID
- * @param page 页码
- * @param size 每页大小
- * @returns 动态列表分页数据
- */
-export function getDreamPosts(dreamId: number, page: number, size: number): Promise<PageResponse<Post>> {
-  try {
-    console.info(`获取梦想相关动态, dreamId: ${dreamId}, page: ${page}, size: ${size}`);
-    
-    const params: RequestData = {
-      page,
-      size
-    };
-    
-    return request<PageResponse<Post>>(RequestMethod.GET, `/posts/dream/${dreamId}`, params as QueryParams);
-  } catch (error) {
-    console.error(`获取梦想相关动态失败: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error(`获取梦想相关动态失败: ${error instanceof Error ? error.message : String(error)}`);
+    const errorMsg = `发表评论失败: ${error instanceof Error ? error.message : String(error)}`;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
   }
 }

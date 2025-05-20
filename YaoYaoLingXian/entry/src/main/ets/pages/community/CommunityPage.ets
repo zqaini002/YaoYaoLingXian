@@ -45,13 +45,13 @@ export struct CommunityPage {
       
       console.info(`开始获取社区帖子, 页码=${this.currentPage}, 分类=${this.tabs[this.selectedTab]}`);
 
-      const result = await ApiService.getPosts(this.currentPage, 10, this.selectedTab);
+      const result: PageResponse<Post> = await ApiService.getPosts(this.currentPage, 10, this.selectedTab);
       console.info(`获取到社区帖子数据: 总数=${result.content?.length || 0}, 总页数=${result.totalPages}`);
       
       if (refresh) {
         this.posts = result.content || [];
       } else {
-        this.posts = [...this.posts, ...(result.content || [])];
+        this.posts = this.posts.concat(result.content || []);
       }
       this.hasMore = !result.last;
       this.currentPage++;
@@ -64,8 +64,9 @@ export struct CommunityPage {
         console.info(`第一条帖子信息: ID=${firstPost.id}, 标题=${firstPost.title}, 图片=${firstPost.imageUrls?.length || 0}张`);
       }
     } catch (error) {
-      this.dataError = `加载数据出错: ${(error as Error).message}`;
-      console.error(`获取帖子数据错误: ${(error as Error).message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.dataError = `加载数据出错: ${errorMessage}`;
+      console.error(`获取帖子数据错误: ${errorMessage}`);
       
       // 显示提示
       promptAction.showToast({
@@ -89,11 +90,19 @@ export struct CommunityPage {
       }
       post.isLiked = !post.isLiked;
     } catch (error) {
-      console.error(`点赞操作失败: ${(error as Error).message}`);
-      promptAction.showToast({
-        message: `操作失败: ${(error as Error).message}`,
+      console.error(`点赞操作失败: ${error instanceof Error ? error.message : String(error)}`);
+      // 创建提示配置对象
+      interface ToastOptions {
+        message: string;
+        duration: number;
+      }
+      
+      const toastOptions: ToastOptions = {
+        message: `操作失败: ${error instanceof Error ? error.message : String(error)}`,
         duration: 2000
-      });
+      };
+      
+      promptAction.showToast(toastOptions);
     }
   }
 
@@ -130,16 +139,38 @@ export struct CommunityPage {
     try {
       this.commentLoading = true;
       
-      const comment: Comment = {
+      // 定义评论请求参数接口
+      interface CommentRequest {
+        id: number;
+        postId: number;
+        userId: number;
+        content: string;
+        createdAt: string;
+        parentId: number;
+        username: string;  // 修正属性名为username
+        avatar: string;
+        likeCount: number;
+        replyCount: number;
+      }
+      
+      // 创建评论对象
+      const comment: CommentRequest = {
         id: 0,
         postId: this.currentPostId,
         userId: 0, // 后端会从当前认证用户中获取
         content: this.commentText,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        parentId: 0,
+        username: '',  // 使用正确的属性名
+        avatar: '',
+        likeCount: 0,
+        replyCount: 0
       };
       
-      const newComment = await ApiService.createComment(this.currentPostId, comment);
-      this.comments = [newComment, ...this.comments];
+      const newComment: Comment = await ApiService.createComment(this.currentPostId, comment as Comment);
+      
+      // 使用concat方法替代展开运算符
+      this.comments = [newComment].concat(this.comments);
       this.commentText = '';
       
       // 更新帖子的评论数
@@ -153,9 +184,10 @@ export struct CommunityPage {
         duration: 2000
       });
     } catch (error) {
-      console.error(`发表评论失败: ${(error as Error).message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`发表评论失败: ${errorMessage}`);
       promptAction.showToast({
-        message: `发表评论失败: ${(error as Error).message}`,
+        message: `发表评论失败: ${errorMessage}`,
         duration: 2000
       });
     } finally {

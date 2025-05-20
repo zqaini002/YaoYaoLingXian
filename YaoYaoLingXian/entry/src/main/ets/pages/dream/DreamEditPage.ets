@@ -1,5 +1,7 @@
+import util from '@ohos.util';
 import router from '@ohos.router';
 import * as ApiService from '../../services/ApiService';
+import { processImageUrl } from '../../services/ApiService'; // 导入processImageUrl函数
 import { Dream } from '../../model/CommonTypes';
 import { AppIcons } from '../../utils/IconUtils';
 import { promptAction } from '../../utils/PromptUtils';
@@ -10,7 +12,15 @@ import image from '@ohos.multimedia.image';
 import http from '@ohos.net.http';
 import fs from '@ohos.file.fs';
 import { BASE_URL } from '../../services/ApiService';
+import request from '@ohos.request';
+import fileIo from '@ohos.fileio';
+import dataSharePredicates from '@ohos.data.dataSharePredicates';
+import UIAbility from '@ohos.app.ability.UIAbility';
+import featureAbility from '@ohos.ability.featureAbility'
+import { photoAccessHelper } from '@kit.MediaLibraryKit';
+import { UploadImageParams } from '../../services/ApiService';
 
+import type { UIContext } from '@kit.ArkUI';
 /**
  * 接口定义部分
  */
@@ -58,6 +68,12 @@ interface ImageResponseData {
   filename: string;
 }
 
+// 上传图片数据接口
+interface UploadImageData {
+  base64Image: string;
+  fileName: string;
+}
+
 /**
  * 定义http.MultiFormData类型以匹配API要求
  */
@@ -69,13 +85,37 @@ interface MultiFormData {
   remoteFileName?: string; // 服务器端文件名
 }
 
+// 自定义表单数据类型
+interface ImageFormData {
+  name: string;
+  filename: string;
+  contentType: string;
+  uri: string;
+}
+
+// 自定义表单数据项
+interface FormDataItem {
+  name: string;
+  value: string | ArrayBuffer | string[];
+  filename?: string;
+  contentType?: string;
+}
+
 // HTTP请求配置
-interface HttpRequestConfig {
+interface HttpRequestOptions {
   method: http.RequestMethod;
-  header: HttpHeader;
-  connectTimeout: number;
-  readTimeout: number;
-  multiFormDataList?: MultiFormData[];
+  header?: Record<string, string>;
+  connectTimeout?: number;
+  readTimeout?: number;
+  expectDataType?: http.HttpDataType;
+  extraData?: string | Object | ArrayBuffer | FormDataItem[];
+  usingCache?: boolean;
+}
+
+// 文件表单选项
+interface FileOptions {
+  filename: string;
+  contentType: string;
 }
 
 /**
@@ -175,6 +215,87 @@ class CustomDate {
   }
 }
 
+// 请求配置类型
+interface UploadConfig {
+  url: string;
+  header: Record<string, string>;
+  method: string;
+  files: Array<UploadFile>;
+  data: Array<UploadFormData>;
+}
+
+// 上传文件类型
+interface UploadFile {
+  filename: string;
+  name: string;
+  uri: string;
+  type: string;
+}
+
+// 上传表单数据类型
+interface UploadFormData {
+  name: string;
+  value: string;
+}
+
+// 修改错误信息提取函数
+function getErrorMessage(error: Object | string | null | undefined): string {
+  let errorMessage = '未知错误';
+  if (error === null || error === undefined) {
+    return errorMessage;
+  }
+  
+  if (typeof error === 'string') {
+    return error;
+  }
+  
+  if (typeof error === 'object') {
+    // 检查是否有message属性，不使用in操作符
+    const errorObj = error as Record<string, string>;
+    if (errorObj.message !== undefined) {
+      return String(errorObj.message);
+    }
+  }
+  
+  return String(error);
+}
+
+// 定义文件上传参数接口
+interface UploadFileOption {
+  filename: string;
+  name: string;
+  uri: string;
+  contentType: string;
+}
+
+// 定义上传响应接口
+interface UploadResponse {
+  code: number;
+  message: string;
+  data?: UploadResponseData;
+}
+
+// 上传响应数据接口
+interface UploadResponseData {
+  url?: string;
+  filename?: string;
+}
+
+interface FetchOptions {
+  fetchColumns: Array<string>;
+  predicates: dataSharePredicates.DataSharePredicates;
+}
+
+// 添加RequestOptions接口定义
+interface RequestOptions {
+  deliveryMode: number;  // 使用number替代枚举类型
+}
+
+// 添加MediaAssetDataHandler接口定义
+interface MediaAssetDataHandlerInterface<T> {
+  onDataPrepared(data: T): void;
+}
+
 @Entry
 @Component
 export struct DreamEditPage {
@@ -211,6 +332,9 @@ export struct DreamEditPage {
       // 初始化默认图片 - 设置一个固定的占位图URL
       if (!this.dream.imageUrl || this.dream.imageUrl.trim() === '') {
         this.dream.imageUrl = 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d'; // 使用占位图
+      } else {
+        // 确保已有的图片URL被正确处理
+        this.dream.imageUrl = processImageUrl(this.dream.imageUrl);
       }
       
       // 设置默认截止日期
@@ -227,7 +351,17 @@ export struct DreamEditPage {
         this.fetchDreamDetail(params.dreamId);
       }
     } catch (error) {
-      console.error(`初始化页面出错: ${error instanceof Error ? error.message : String(error)}`);
+      // 提取错误信息
+      let errorMessage = '';
+      if (error) {
+        if (typeof error === 'object' && error.message) {
+          errorMessage = String(error.message);
+        } else {
+          errorMessage = String(error);
+        }
+      }
+      
+      console.error(`初始化页面出错: ${errorMessage}`);
       this.errorMessage = '页面初始化失败，请返回重试。';
       const toastOpts: ToastOptions = { message: this.errorMessage };
       promptAction.showToast(toastOpts);
@@ -241,7 +375,7 @@ export struct DreamEditPage {
     try {
       this.isLoading = true;
       console.info(`获取梦想详情，ID: ${dreamId}`);
-      const dreamDetail = await ApiService.getDreamById(dreamId);
+      const dreamDetail: Dream = await ApiService.getDreamById(dreamId);
       console.info(`获取到梦想详情: ${JSON.stringify(dreamDetail)}`);
       
       // 将后端返回的数据填充到表单
@@ -265,8 +399,16 @@ export struct DreamEditPage {
         this.selectedDate = new CustomDate(); // 如果没有提供deadline，使用当前日期
       }
     } catch (error) {
-      console.error(`获取梦想详情失败: ${error instanceof Error ? error.message : String(error)}`);
-      this.errorMessage = `获取梦想详情失败: ${error instanceof Error ? error.message : String(error)}`;
+      // 提取错误信息
+      let errorMessage = '';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (error !== null && error !== undefined) {
+        errorMessage = String(error);
+      }
+      
+      console.error(`获取梦想详情失败: ${errorMessage}`);
+      this.errorMessage = `获取梦想详情失败: ${errorMessage}`;
       const toastOpts: ToastOptions = { message: this.errorMessage };
       promptAction.showToast(toastOpts);
     } finally {
@@ -355,14 +497,25 @@ export struct DreamEditPage {
         }
       } catch (error) {
         // 处理API错误
-        console.error('API错误：', error instanceof Error ? error.message : String(error));
+        // 提取错误信息
+        let errorMsg = '';
+        if (error) {
+          if (typeof error === 'object' && error.message) {
+            errorMsg = String(error.message);
+          } else {
+            errorMsg = String(error);
+          }
+        }
         
-        // 解析错误信息
-        let errorMsg = '服务器处理请求时出错';
+        console.error('API错误：', errorMsg);
+        
+        // 解析错误信息，默认为服务器处理请求时出错
+        errorMsg = '服务器处理请求时出错';
         
         // 检查是否包含特定的错误信息
-        if (error instanceof Error) {
-          const errorText = error.message || '';
+        if (error) {
+          const errorText = typeof error === 'object' && error.message ? 
+            String(error.message) : String(error);
           
           if (errorText.includes('NullPointerException') || errorText.includes('dreamTags')) {
             errorMsg = '服务器在处理标签时出错，请联系管理员修复后端dreamTags问题';
@@ -379,8 +532,18 @@ export struct DreamEditPage {
       }
     } catch (error) {
       // 处理其他错误
-      console.error('提交梦想表单失败：', error instanceof Error ? error.message : String(error));
-      this.errorMessage = error instanceof Error ? error.message : String(error);
+      // 提取错误信息
+      let errorMessage = '';
+      if (error) {
+        if (typeof error === 'object' && error.message) {
+          errorMessage = String(error.message);
+        } else {
+          errorMessage = String(error);
+        }
+      }
+      
+      console.error('提交梦想表单失败：', errorMessage);
+      this.errorMessage = errorMessage;
       const toastOpts: ToastOptions = { message: '操作失败：' + this.errorMessage };
       promptAction.showToast(toastOpts);
     } finally {
@@ -401,7 +564,17 @@ export struct DreamEditPage {
       // 显示选择器
       this.showDatePicker = true;
     } catch (error) {
-      console.error(`显示日期选择器失败: ${error instanceof Error ? error.message : String(error)}`);
+      // 提取错误信息
+      let errorMessage = '';
+      if (error) {
+        if (typeof error === 'object' && error.message) {
+          errorMessage = String(error.message);
+        } else {
+          errorMessage = String(error);
+        }
+      }
+      
+      console.error(`显示日期选择器失败: ${errorMessage}`);
       const toastOpts: ToastOptions = { message: '无法打开日期选择器' };
       promptAction.showToast(toastOpts);
     }
@@ -442,100 +615,233 @@ export struct DreamEditPage {
       photoSelectOptions.MIMEType = picker.PhotoViewMIMETypes.IMAGE_TYPE;
       photoSelectOptions.maxSelectNumber = 1;
       
-      photoPicker.select(photoSelectOptions)
-        .then((photos) => {
+      try {
+        // 使用await替代Promise链
+        const photos = await photoPicker.select(photoSelectOptions);
+        
           if (photos && photos.photoUris && photos.photoUris.length > 0) {
             this.selectedLocalImage = photos.photoUris[0];
-            this.uploadImage(this.selectedLocalImage);
-          }
-        })
-        .catch(() => {
+          console.info(`选择的图片URI: ${this.selectedLocalImage}`);
+          
+          // 保持原始完整路径，包括file://前缀
+          // 鸿蒙OS需要完整URI来访问媒体文件
+          let filePath = this.selectedLocalImage;
+          console.info(`使用完整的文件URI: ${filePath}`);
+          
+          // 使用完整URI路径
+          this.uploadImage(filePath);
+        }
+      } catch (err) {
           // 不直接引用错误参数，避免隐式类型问题
+        console.error('选择图片失败', err);
           const toastOpts: ToastOptions = { message: '选择图片失败' };
           promptAction.showToast(toastOpts);
-          console.error('选择图片失败');
-        });
-    } catch (_) {
-      // 不直接引用错误参数，避免隐式类型问题
+      }
+    } catch (err) {
+      // 处理选择器创建过程中的错误
+      console.error('选择图片器错误', err);
       const toastOpts: ToastOptions = { message: '选择图片时出错' };
       promptAction.showToast(toastOpts);
-      console.error('选择图片器错误');
     }
   }
   
   // 上传图片到服务器
-  async uploadImage(imageUri: string): Promise<void> {
+  async uploadImage(imageUri: string): Promise<string | null> {
     try {
       this.isUploadingImage = true;
       const toastOpts: ToastOptions = { message: '开始上传图片...' };
       promptAction.showToast(toastOpts);
-        
-      // HTTP请求头
-      const headers: HttpHeader = {
-        'Content-Type': 'multipart/form-data',
-      };
+      console.info(`准备上传图片: ${imageUri}`);
       
-      // 文件信息 - 使用MultiFormData对象正确配置
-      // 明确定义multiFormDataList的类型
-      const multiFormData: MultiFormData[] = [
-        {
-          name: 'file',
-          contentType: 'image/jpeg',
-          filePath: imageUri,
-          remoteFileName: 'dream_image.jpg'
-        }
-      ];
-      
-      // 创建符合http.HttpRequestOptions的请求选项
-      const requestOptions: http.HttpRequestOptions = {
-        method: http.RequestMethod.POST,
-        header: headers,
-        connectTimeout: 60000,
-        readTimeout: 60000,
-        multiFormDataList: multiFormData
-      };
-      
-      // 发送请求
-      let httpRequest = http.createHttp();
-      httpRequest.request(
-        `${BASE_URL}/files/upload`,
-        requestOptions
-      ).then((response) => {
+      // 检查URI格式
+      if (!imageUri.startsWith('file://')) {
+        console.error('无效的文件URI格式，必须以file://开头');
+        const toastOpts: ToastOptions = { message: '无效的文件路径' };
+        promptAction.showToast(toastOpts);
         this.isUploadingImage = false;
-        if (response.responseCode === 200) {
-          // 确保result先转为字符串
-          const resultText = response.result.toString();
-          // 使用类型断言将解析后的JSON对象转为ApiResponse类型
-          const responseData = JSON.parse(resultText) as ApiResponse;
+        return null;
+      }
+      
+      try {
+        // 使用convertImageToBase64方法处理图片
+        let base64String = await this.convertImageToBase64(imageUri);
+        if (base64String) {
+          console.info('图片转Base64成功，长度: ' + base64String.length);
           
-          if (responseData.code === 200) {
-            this.dream.imageUrl = responseData.data.url;
-            const toastOpts: ToastOptions = { message: '图片上传成功' };
-            promptAction.showToast(toastOpts);
-          } else {
-            const toastOpts: ToastOptions = { message: '图片上传失败: ' + responseData.message };
+          // 上传Base64字符串到服务器
+          try {
+            // 修改类型定义，使用与ApiService一致的接口名
+            const uploadData: UploadImageParams = {
+              base64Image: base64String,
+              fileName: imageUri.substring(imageUri.lastIndexOf('/') + 1)
+            };
+            
+            // 调用API上传图片
+            const response = await ApiService.uploadImage(uploadData);
+            console.info('图片上传成功，服务器返回数据：', JSON.stringify(response));
+            
+            // 更新梦想对象的imageUrl
+            if (response && response.url) {
+              this.dream.imageUrl = response.url;
+              const toastOpts: ToastOptions = { message: '图片上传成功！' };
+              promptAction.showToast(toastOpts);
+            } else {
+              console.error('服务器返回的图片URL为空');
+              const toastOpts: ToastOptions = { message: '图片上传失败：服务器返回的URL为空' };
+              promptAction.showToast(toastOpts);
+            }
+          } catch (error) {
+            console.error('图片上传到服务器失败:', error);
+            const toastOpts: ToastOptions = { message: '图片上传到服务器失败' };
             promptAction.showToast(toastOpts);
           }
+          
+          // 返回Base64字符串，方便后续处理
+          return base64String;
         } else {
-          const toastOpts: ToastOptions = { message: '上传失败，请重试' };
+          console.error('图片转Base64失败');
+          const toastOpts: ToastOptions = { message: '图片转Base64失败' };
           promptAction.showToast(toastOpts);
+          return null;
         }
-      }).catch(() => {
-        this.isUploadingImage = false;
-        // 不直接引用错误参数，避免隐式类型问题
-        const toastOpts: ToastOptions = { message: '网络错误，上传失败' };
+      } catch (error) {
+        console.error('读取文件内容失败', error);
+        const toastOpts: ToastOptions = { message: '读取文件内容失败' };
         promptAction.showToast(toastOpts);
-        console.error('上传失败');
-      }).finally(() => {
-        httpRequest.destroy();
-      });
-    } catch (_) {
-      this.isUploadingImage = false;
-      // 不直接引用错误参数，避免隐式类型问题
-      const toastOpts: ToastOptions = { message: '上传过程中出错' };
+        return null;
+      }
+    } catch (error) {
+      console.error('上传图片过程中出错', error);
+      
+      // 提取错误信息
+      const errorMessage = getErrorMessage(error);
+      
+      const toastOpts: ToastOptions = { message: `上传过程中出错: ${errorMessage}` };
       promptAction.showToast(toastOpts);
-      console.error('上传图片过程中出错');
+      return null;
+    } finally {
+      // 无论成功失败，最终都要重置上传状态
+      this.isUploadingImage = false;
     }
+  }
+  
+  // 将图片转换为Base64
+  private async convertImageToBase64(imageUri: string): Promise<string | null> {
+    try {
+      // 直接文件路径读取
+      if (imageUri.startsWith('file://') && !imageUri.startsWith('file://media/')) {
+        try {
+          const realPath: string = imageUri.replace('file://', '');
+          await fileIo.access(realPath);
+          const fd: number = await fileIo.open(realPath, 0);
+          const stat: fileIo.Stat = await fileIo.stat(realPath);
+          const fileSize: number = stat.size;
+          const buffer: ArrayBuffer = new ArrayBuffer(fileSize);
+          await fileIo.read(fd, buffer);
+          await fileIo.close(fd);
+          const base64Helper: util.Base64Helper = new util.Base64Helper();
+          return base64Helper.encodeToStringSync(new Uint8Array(buffer));
+        } catch (error) {
+          console.error('直接文件路径读取失败，尝试使用photoAccessHelper', error);
+        }
+      }
+      
+      // 使用photoAccessHelper正确的API
+      const context = getContext(this);
+      const phAccessHelper = photoAccessHelper.getPhotoAccessHelper(context);
+      
+      // 构建查询条件
+      let predicates = new dataSharePredicates.DataSharePredicates();
+      predicates.equalTo('uri', imageUri);
+      let fetchOptions: FetchOptions = {
+        fetchColumns: [],
+        predicates: predicates
+      };
+      
+      // 异步返回Promise
+      return new Promise<string | null>((resolve, reject) => {
+        // 定义数据处理器
+        class MediaDataHandler implements MediaAssetDataHandlerInterface<ArrayBuffer> {
+          onDataPrepared(data: ArrayBuffer): void {
+            if (data === undefined) {
+              console.error('获取图片数据失败');
+              resolve(null);
+              return;
+            }
+            
+            try {
+              // 转换为Base64
+              const uint8Array = new Uint8Array(data);
+              const base64Helper: util.Base64Helper = new util.Base64Helper();
+              const base64 = base64Helper.encodeToStringSync(uint8Array);
+              resolve(base64);
+            } catch (error) {
+              console.error('Base64转换失败:', error);
+              resolve(null);
+            }
+          }
+        }
+        
+        // 先获取资源
+        phAccessHelper.getAssets(fetchOptions)
+          .then(async (fetchResult) => {
+            if (fetchResult.getCount() > 0) {
+              const photoAsset = await fetchResult.getFirstObject();
+              if (photoAsset) {
+                // 配置请求选项
+                const requestOptions: RequestOptions = {
+                  deliveryMode: 1  // 使用数字1代表HIGH_QUALITY_MODE
+                };
+                
+                // 请求图片数据
+                const handler = new MediaDataHandler();
+                photoAccessHelper.MediaAssetManager.requestImageData(context, photoAsset, requestOptions, handler)
+                  .catch((err: Error) => {
+                    console.error(`获取图片数据失败: ${err.name}, ${err.message}`);
+                    resolve(null);
+                  });
+              } else {
+                console.error('未找到图片资源');
+                resolve(null);
+              }
+            } else {
+              console.error('未找到匹配的图片资源');
+              resolve(null);
+            }
+          })
+          .catch((error: Error) => {
+            console.error('获取资源失败:', error);
+            resolve(null);
+          });
+      });
+    } catch (error) {
+      console.error('图片处理过程中发生错误:', error);
+      return null;
+    }
+  }
+  
+  // 从URI中获取文件ID - 修正正则表达式以正确提取ID
+  private getFileIdFromUri(uri: string): string | null {
+    try {
+      // 匹配形如 file://media/Photo/1/IMG_1747504493_000/xxx.png 的URI
+      const regex = /file:\/\/media\/Photo\/(\d+)\/([^\/]+)/;
+      const match = uri.match(regex);
+      if (match && match.length >= 2) {
+        return match[1]; // 返回ID部分 (1)
+      }
+      return null;
+    } catch (error) {
+      const errorMsg: string = error instanceof Error ? error.message : String(error);
+      console.error(`解析URI失败: ${errorMsg}`);
+      return null;
+    }
+  }
+  
+  // ArrayBuffer转Base64工具函数
+  private arrayBufferToBase64(buffer: Uint8Array): string {
+    // 创建Base64Helper实例后再调用方法
+    const base64Helper: util.Base64Helper = new util.Base64Helper();
+    return base64Helper.encodeToStringSync(buffer);
   }
 
   build() {
@@ -629,7 +935,7 @@ export struct DreamEditPage {
                 .margin({ bottom: CommonConstants.MARGIN_SMALL, top: CommonConstants.MARGIN_LARGE })
               
               Row() {
-                Image(this.dream.imageUrl)
+                Image(processImageUrl(this.dream.imageUrl))
                   .width(100)
                   .height(100)
                   .borderRadius(CommonConstants.RADIUS_NORMAL)
