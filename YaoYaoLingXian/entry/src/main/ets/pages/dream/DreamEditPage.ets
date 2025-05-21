@@ -18,7 +18,7 @@ import dataSharePredicates from '@ohos.data.dataSharePredicates';
 import UIAbility from '@ohos.app.ability.UIAbility';
 import featureAbility from '@ohos.ability.featureAbility'
 import { photoAccessHelper } from '@kit.MediaLibraryKit';
-import { UploadImageParams } from '../../services/ApiService';
+import { UploadImageParams, deleteDream } from '../../services/ApiService';
 
 import type { UIContext } from '@kit.ArkUI';
 /**
@@ -632,10 +632,9 @@ export struct DreamEditPage {
           this.uploadImage(filePath);
         }
       } catch (err) {
-          // 不直接引用错误参数，避免隐式类型问题
         console.error('选择图片失败', err);
-          const toastOpts: ToastOptions = { message: '选择图片失败' };
-          promptAction.showToast(toastOpts);
+        const toastOpts: ToastOptions = { message: '选择图片失败' };
+        promptAction.showToast(toastOpts);
       }
     } catch (err) {
       // 处理选择器创建过程中的错误
@@ -842,6 +841,59 @@ export struct DreamEditPage {
     // 创建Base64Helper实例后再调用方法
     const base64Helper: util.Base64Helper = new util.Base64Helper();
     return base64Helper.encodeToStringSync(buffer);
+  }
+
+  /**
+   * 删除当前梦想
+   */
+  private deleteDreamItem() {
+    if (!this.dream.id) {
+      console.error('无法删除梦想：梦想ID不存在');
+      const toastOpts: ToastOptions = { message: '无法删除梦想' };
+      promptAction.showToast(toastOpts);
+      return;
+    }
+
+    promptAction_1.showDialog({
+      title: '确认删除',
+      message: '确定要删除这个梦想吗？删除后将无法恢复。',
+      buttons: [
+        {
+          text: '取消',
+          color: CommonConstants.COLOR_TEXT_SECONDARY
+        },
+        {
+          text: '删除',
+          color: '#FF0000'
+        }
+      ]
+    })
+    .then((result) => {
+      if (result.index === 1) { // 用户点击了"删除"按钮
+        this.isLoading = true;
+        // 类型安全：确保id是number类型
+        const dreamId: number = this.dream.id || 0; // 使用空值合并
+        deleteDream(dreamId)
+          .then(() => {
+            const toastOpts: ToastOptions = { message: '梦想已成功删除' };
+            promptAction.showToast(toastOpts);
+            // 返回上一页
+            router.back();
+          })
+          .catch((err: Error | string | Object) => {
+            const errorMsg = err instanceof Error ? err.message : String(err);
+            console.error(`删除梦想失败: ${errorMsg}`);
+            const toastOpts: ToastOptions = { message: `删除失败: ${errorMsg}` };
+            promptAction.showToast(toastOpts);
+          })
+          .finally(() => {
+            this.isLoading = false;
+          });
+      }
+    })
+    .catch((err: Error | string | Object) => {
+      console.error(`显示对话框失败: ${err}`);
+    });
   }
 
   build() {
@@ -1187,19 +1239,44 @@ export struct DreamEditPage {
             .alignItems(HorizontalAlign.Start)
             
             // 提交按钮
-            Button(this.isEditing ? '保存修改' : '创建梦想')
-              .width('100%')
+            Row() {
+              // 保存/创建按钮
+              Button() {
+                Text(this.isEditing ? '保存修改' : '创建梦想')
+                  .fontSize(16)
+                  .fontColor('#FFFFFF')
+              }
+              .width(this.dream.id ? '45%' : '100%')
               .height(50)
-              .backgroundColor($r('app.color.primary_color'))
-              .borderRadius(CommonConstants.RADIUS_NORMAL)
-              .fontSize(CommonConstants.FONT_SIZE_NORMAL)
-              .fontWeight(FontWeight.Bold)
-              .margin({ top: CommonConstants.MARGIN_XLARGE, bottom: CommonConstants.MARGIN_XLARGE })
-              .onClick(() => {
-                this.submitForm();
-              })
+              .backgroundColor(this.isSubmitting ? '#999999' : '#2196F3')
+              .borderRadius(8)
               .enabled(!this.isSubmitting)
               .opacity(this.isSubmitting ? 0.5 : 1)
+              .onClick(() => this.submitForm())
+              
+              if (this.dream.id) {
+                // 间隔
+                Divider()
+                  .width(16)
+                  .color('#00000000')
+                
+                // 删除按钮
+                Button() {
+                  Text('删除梦想')
+                    .fontSize(16)
+                    .fontColor('#FFFFFF')
+                }
+                .width('45%')
+                .height(50)
+                .backgroundColor('#FF4757')
+                .borderRadius(8)
+                .enabled(!this.isSubmitting)
+                .onClick(() => this.deleteDreamItem())
+              }
+            }
+            .width('100%')
+            .justifyContent(this.dream.id ? FlexAlign.SpaceBetween : FlexAlign.Center)
+            .margin({ top: 24, bottom: 24 })
           }
           .width('100%')
           .padding({ left: CommonConstants.MARGIN_LARGE, right: CommonConstants.MARGIN_LARGE })

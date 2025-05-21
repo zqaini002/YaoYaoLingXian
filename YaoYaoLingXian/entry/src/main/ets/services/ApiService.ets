@@ -820,3 +820,21 @@ export function createComment(postId: number, comment: Comment): Promise<Comment
     throw new Error(errorMsg);
   }
 }
+
+/**
+ * 删除梦想
+ * 
+ * @param id 梦想ID
+ * @returns 删除结果，通常为空对象或状态码
+ */
+export function deleteDream(id: number): Promise<void> {
+  console.info(`开始删除梦想, ID: ${id}`);
+  try {
+    return request<void>(RequestMethod.DELETE, `/dreams/${id}`);
+  } catch (error) {
+    const errorMsg = `删除梦想失败: ${error instanceof Error ? error.message : String(error)}`;
+    console.error(errorMsg);
+    console.error(`梦想ID: ${id}`);
+    throw new Error(errorMsg);
+  }
+}

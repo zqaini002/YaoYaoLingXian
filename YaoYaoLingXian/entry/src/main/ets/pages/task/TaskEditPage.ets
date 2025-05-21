@@ -1010,20 +1010,51 @@ export struct TaskEditPage {
       
       // 底部保存按钮
       Row() {
-        Button('保存')
-          .width('100%')
-          .height(48)
-          .fontSize(CommonConstants.FONT_SIZE_NORMAL)
-          .fontWeight(FontWeight.Medium)
-          .backgroundColor($r('app.color.primary_color'))
-          .borderRadius(CommonConstants.RADIUS_NORMAL)
-          .enabled(!this.isSubmitting)
-          .stateEffect(true)
-          .onClick((): void => {
-            void this.saveTask();
-          })
+        if (this.isEdit) {
+          // 编辑模式：显示保存和删除按钮
+          Button('保存')
+            .width('48%')
+            .height(48)
+            .fontSize(CommonConstants.FONT_SIZE_NORMAL)
+            .fontWeight(FontWeight.Medium)
+            .backgroundColor($r('app.color.primary_color'))
+            .borderRadius(CommonConstants.RADIUS_NORMAL)
+            .enabled(!this.isSubmitting)
+            .stateEffect(true)
+            .onClick((): void => {
+              void this.saveTask();
+            })
+          
+          Button('删除')
+            .width('48%')
+            .height(48)
+            .fontSize(CommonConstants.FONT_SIZE_NORMAL)
+            .fontWeight(FontWeight.Medium)
+            .backgroundColor($r('app.color.error_color'))
+            .borderRadius(CommonConstants.RADIUS_NORMAL)
+            .enabled(!this.isSubmitting)
+            .stateEffect(true)
+            .onClick((): void => {
+              this.showDeleteConfirmDialog();
+            })
+        } else {
+          // 创建模式：只显示保存按钮
+          Button('保存')
+            .width('100%')
+            .height(48)
+            .fontSize(CommonConstants.FONT_SIZE_NORMAL)
+            .fontWeight(FontWeight.Medium)
+            .backgroundColor($r('app.color.primary_color'))
+            .borderRadius(CommonConstants.RADIUS_NORMAL)
+            .enabled(!this.isSubmitting)
+            .stateEffect(true)
+            .onClick((): void => {
+              void this.saveTask();
+            })
+        }
       }
       .width('100%')
+      .justifyContent(this.isEdit ? FlexAlign.SpaceBetween : FlexAlign.Center)
       .padding({
         left: CommonConstants.MARGIN_LARGE,
         right: CommonConstants.MARGIN_LARGE,
@@ -1051,25 +1082,34 @@ export struct TaskEditPage {
   showDeleteConfirmDialog(): void {
     this.showDeleteDialog = true;
     
-    AlertDialog.show({
-      title: $r('app.string.dialog_delete_title'),
-      message: $r('app.string.dialog_delete_message'),
-      autoCancel: true,
-      alignment: DialogAlignment.Bottom,
-      primaryButton: {
-        value: $r('app.string.cancel'),
-        action: (): void => {
+    const dialogOptions: promptAction.ShowDialogOptions = {
+      title: '确认删除',
+      message: '确定要删除这个任务吗？删除后将无法恢复。',
+      buttons: [
+        {
+          text: '取消',
+          color: '#666666'
+        },
+        {
+          text: '删除',
+          color: '#FF4757'
+        }
+      ]
+    };
+    
+    promptAction.showDialog(dialogOptions)
+      .then((result: DialogResultType) => {
+        if (result.index === 1) {
+          // 用户选择了"删除"按钮
+          this.confirmDeleteTask();
+        } else {
+          // 用户选择了"取消"按钮
           this.showDeleteDialog = false;
         }
-      },
-      secondaryButton: {
-        value: $r('app.string.delete'),
-        fontColor: $r('app.color.error_color'),
-        action: (): void => {
-          this.confirmDeleteTask();
-        }
-      }
-    });
+      })
+      .catch((err: Error) => {
+        console.error(`显示删除对话框失败: ${err}`);
+      });
   }
 
   // 梦想选择按钮点击事件
