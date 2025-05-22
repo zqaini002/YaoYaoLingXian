@@ -6,7 +6,11 @@
     },
     {
       "name": "primary_color",
-      "value": "#4D8CFE"
+      "value": "#1976d2"
+    },
+    {
+      "name": "primary_dark_color",
+      "value": "#1565c0"
     },
     {
       "name": "primary_color_light",
@@ -18,7 +22,7 @@
     },
     {
       "name": "accent_color",
-      "value": "#FF6B6B"
+      "value": "#64b5f6"
     },
     {
       "name": "background_color",
@@ -170,7 +174,15 @@
     },
     {
       "name": "error_color",
-      "value": "#FF5252"
+      "value": "#F44336"
+    },
+    {
+      "name": "text_hint",
+      "value": "#999999"
+    },
+    {
+      "name": "divider_color",
+      "value": "#EEEEEE"
     }
   ]
 }

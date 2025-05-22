@@ -2,11 +2,10 @@ import router from '@ohos.router';
 import { CommonConstants, Dream, DreamSimple } from '../../model/CommonTypes';
 import { AppIcons } from '../../utils/IconUtils';
 import { getDreamsByUserId, getDreamsByUserIdAndCategory, searchDreams } from '../../services/ApiService';
+import { UserSession } from '../../utils/auth/UserSession';
 
 @Component
 export struct DreamPage {
-  // 假设当前用户ID为2
-  private userId: number = 2;
   @State searchText: string = '';
   @State selectedCategory: string = '全部';
   @State categories: string[] = ['全部', '学习', '健康', '旅行', '创作', '艺术', '职业', '生活技能'];
@@ -19,9 +18,12 @@ export struct DreamPage {
   
   // 初始化空数组，将在页面创建时从API获取真实数据
   @State dreams: Dream[] = [];
+  
+  // 用户会话
+  private userSession: UserSession = UserSession.getInstance();
 
   aboutToAppear() {
-    this.getData();
+    this.loadDreams();
   }
   
   onPageShow() {
@@ -54,9 +56,11 @@ export struct DreamPage {
   async searchDreams(keyword: string) {
     try {
       this.isDreamsLoading = true;
-      const result = await searchDreams(this.userId, keyword);
+      // 确保使用当前登录用户ID
+      const userId = this.userSession.getUserId();
+      const result = await searchDreams(userId, keyword);
       this.dreams = result.content;
-      console.info(`搜索梦想成功，关键词: ${keyword}, 结果数量: ${this.dreams.length}`);
+      console.info(`搜索梦想成功，userId: ${userId}, 关键词: ${keyword}, 结果数量: ${this.dreams.length}`);
     } catch (error) {
       console.error(`搜索梦想失败: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
@@ -69,20 +73,30 @@ export struct DreamPage {
     try {
       this.isDreamsLoading = true;
       
+      // 获取当前登录用户ID
+      const userId = this.userSession.getUserId();
+      
       if (this.selectedCategory === '全部') {
         // 获取所有梦想
-        this.dreams = await getDreamsByUserId(this.userId);
+        this.dreams = await getDreamsByUserId(userId);
       } else {
         // 获取特定分类的梦想
-        this.dreams = await getDreamsByUserIdAndCategory(this.userId, this.selectedCategory);
+        this.dreams = await getDreamsByUserIdAndCategory(userId, this.selectedCategory);
       }
       
-      console.info(`成功获取用户梦想列表，分类: ${this.selectedCategory}, 数量: ${this.dreams.length}`);
+      console.info(`成功获取用户梦想列表，userId: ${userId}, 分类: ${this.selectedCategory}, 数量: ${this.dreams.length}`);
     } catch (error) {
       console.error(`获取梦想列表失败: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       this.isDreamsLoading = false;
     }
+  }
+
+  // 加载梦想数据
+  async loadDreams() {
+    // 确保使用正确的用户ID
+    const userId = this.userSession.getUserId();
+    await this.getData();
   }
 
   // 点击创建新梦想

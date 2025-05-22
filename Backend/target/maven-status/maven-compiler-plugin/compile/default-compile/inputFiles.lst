@@ -12,14 +12,17 @@ E:\hongm\Backend\src\main\java\com\dreamplanner\entity\Post.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\service\impl\TaskServiceImpl.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\service\UserService.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\dto\DreamDTO.java
+E:\hongm\Backend\src\main\java\com\dreamplanner\dto\LoginDTO.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\service\impl\UserServiceImpl.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\service\impl\PostServiceImpl.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\entity\Dream.java
+E:\hongm\Backend\src\main\java\com\dreamplanner\util\JwtUtil.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\repository\LikeRepository.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\entity\Comment.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\vo\PostVO.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\config\DevSecurityConfig.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\dto\ProgressDTO.java
+E:\hongm\Backend\src\main\java\com\dreamplanner\controller\AuthController.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\controller\ProgressController.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\dto\PostDTO.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\entity\User.java
@@ -34,6 +37,8 @@ E:\hongm\Backend\src\main\java\com\dreamplanner\repository\UserRepository.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\config\CorsConfig.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\repository\DreamRepository.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\dto\DreamStatsDTO.java
+E:\hongm\Backend\src\main\java\com\dreamplanner\service\AuthService.java
+E:\hongm\Backend\src\main\java\com\dreamplanner\service\impl\AuthServiceImpl.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\dto\UserDTO.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\controller\UserController.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\service\TaskService.java
@@ -42,8 +47,10 @@ E:\hongm\Backend\src\main\java\com\dreamplanner\controller\FileController.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\entity\Like.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\common\ApiResponse.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\DreamPlannerApplication.java
+E:\hongm\Backend\src\main\java\com\dreamplanner\dto\RegisterDTO.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\repository\CommentRepository.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\controller\TaskController.java
+E:\hongm\Backend\src\main\java\com\dreamplanner\service\impl\UserDetailsServiceImpl.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\dto\HomePageDTO.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\entity\Tag.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\entity\Progress.java

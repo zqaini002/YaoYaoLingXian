@@ -1,0 +1,103 @@
+# 鸿蒙OS前端项目 (HarmonyOS/ArkTS)
+# IDE 和构建相关
+.idea/
+.hvigor/
+**/build/
+.cxx/
+.clangd/
+.clang-format
+.clang-tidy
+.appanalyzer/
+.test/
+
+# 依赖和模块
+node_modules/
+oh_modules/
+
+# 本地配置文件
+local.properties
+**/Thumbs.db
+**/.DS_Store
+
+# 构建产物
+dist/
+build/
+*.hap
+*.app
+*.rpk
+
+# 日志文件
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Java后端项目
+# 编译输出
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Spring Boot
+application-dev.properties
+application-prod.properties
+application-test.properties
+!**/src/main/resources/application.yml
+!**/src/main/resources/application.properties
+!**/src/main/resources/bootstrap.yml
+!**/src/main/resources/bootstrap.properties
+
+# 文件上传目录
+uploads/
+
+# 日志
+logs/
+*.log
+
+# 测试报告
+/test-output/
+test-output-tests/
+
+# IDE相关
+.settings/
+.project
+.classpath
+.factorypath
+.vscode/
+*.iws
+*.iml
+*.ipr
+
+# 运行时文件
+.lock
+.temp
+.tmp
+
+# 敏感信息配置
+**/resources/application-dev.yml
+**/resources/application-prod.yml
+**/resources/application-test.yml
+**/resources/secret.properties
+**/*-secret.properties
+**/*-credentials.properties
+
+# 安全敏感配置
+**/src/main/resources/keystore.jks
+**/src/main/resources/truststore.jks
+**/src/main/resources/ssl/
+**/src/main/resources/keys/
+**/*.pem
+**/*.key
+**/*.p12

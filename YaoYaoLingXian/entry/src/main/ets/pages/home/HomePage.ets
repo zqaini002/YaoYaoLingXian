@@ -5,6 +5,7 @@ import { SystemIcon } from '../../components/SystemIcon';
 import { getTimeOfDay, TimeUtils } from '../../utils/TimeUtils';
 import * as ApiService from '../../services/ApiService';
 import router from '@ohos.router';
+import { UserSession } from '../../utils/auth/UserSession';
 
 @Component
 export struct HomePage {
@@ -43,8 +44,8 @@ export struct HomePage {
   };
   @State recentDreams: Dream[] = [];
   @State loading: boolean = true;
-  @State userId: number = 2; // 默认用户ID
   @State dailyQuote: string = '每天进步一点点，离梦想更近一点点。';
+  @State userId: number = 0; // 用户ID
   
   private dailyQuotes: string[] = [
     '每天进步一点点，离梦想更近一点点。',
@@ -56,9 +57,25 @@ export struct HomePage {
     '每一个成功者都有一个开始，勇于开始，才能找到成功的路。'
   ];
 
+  private userSession: UserSession = UserSession.getInstance();
+
   aboutToAppear() {
-    this.dailyQuote = this.dailyQuotes[Math.floor(Math.random() * this.dailyQuotes.length)];
+    this.initializeData();
     this.loadData();
+  }
+  
+  // 初始化数据
+  initializeData() {
+    // 从UserSession获取当前登录用户的ID
+    this.userId = this.userSession.getUserId();
+    console.info(`初始化首页数据，获取到用户ID: ${this.userId}`);
+    
+    // 随机选择一条每日励志语
+    const randomQuoteIndex = Math.floor(Math.random() * this.dailyQuotes.length);
+    this.dailyQuote = this.dailyQuotes[randomQuoteIndex];
+    
+    // 获取问候语
+    this.greeting = TimeUtils.getGreetingByTime();
   }
 
   async loadData() {

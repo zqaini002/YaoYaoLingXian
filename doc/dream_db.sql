@@ -11,14 +11,11 @@
  Target Server Version : 80042 (8.0.42)
  File Encoding         : 65001
 
- Date: 16/05/2025 18:59:09
+ Date: 22/05/2025 21:49:57
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
-
-create database dream_db;
-use dream_db;
 
 -- ----------------------------
 -- Table structure for comment
@@ -83,13 +80,13 @@ CREATE TABLE `dream`  (
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
   INDEX `idx_category`(`category` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '梦想目标表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 23 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '梦想目标表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of dream
 -- ----------------------------
-INSERT INTO `dream` VALUES (1, 2, '学习英语', '提高英语口语能力，能够流利地进行日常交流和商务沟通', '学习', 1, 1, 35.00, '2024-12-31', 365, 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `dream` VALUES (2, 2, '完成马拉松', '参加一次全程马拉松比赛并完赛', '健康', 2, 1, 20.00, '2024-06-30', 180, 'https://images.unsplash.com/photo-1530137234839-95979146bdd2', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
+INSERT INTO `dream` VALUES (1, 2, '学习英语', '提高英语口语能力，能够流利地进行日常交流和商务沟通', '学习', 1, 1, 35.00, '2024-12-31', 365, 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-20 13:54:35');
+INSERT INTO `dream` VALUES (2, 2, '完成马拉松', '参加一次全程马拉松比赛并完赛', '健康', 2, 1, 29.00, '2024-06-30', 180, 'http://swcp3k13z.hd-bkt.clouddn.com/OIP.jpg', 1, '2025-05-16 15:42:50', '2025-05-21 16:59:28');
 INSERT INTO `dream` VALUES (3, 3, '学习编程', '掌握Python编程语言，能够独立开发小型应用', '学习', 1, 1, 50.00, '2024-08-31', 240, 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
 INSERT INTO `dream` VALUES (4, 3, '环游欧洲', '游览欧洲五个国家的主要城市和景点', '旅行', 3, 1, 0.00, '2025-12-31', 30, 'https://images.unsplash.com/photo-1503917988258-f87a78e3c995', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
 INSERT INTO `dream` VALUES (5, 4, '写一本小说', '完成一部8万字以上的科幻小说创作', '创作', 2, 1, 15.00, '2024-12-31', 300, 'https://images.unsplash.com/photo-1455390582262-044cdead277a', 0, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
@@ -309,7 +306,7 @@ CREATE TABLE `progress`  (
   INDEX `idx_dream_id`(`dream_id` ASC) USING BTREE,
   INDEX `idx_task_id`(`task_id` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '进度记录表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 20 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '进度记录表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of progress
@@ -329,6 +326,10 @@ INSERT INTO `progress` VALUES (12, 5, 22, 4, '创建了三个主要角色的详�
 INSERT INTO `progress` VALUES (13, 6, NULL, 4, '参加了摄影基础课程，学习了相机参数的基本设置和应用。', 'https://images.unsplash.com/photo-1607462109225-6b64ae2dd3cb', '2025-05-16 15:42:50');
 INSERT INTO `progress` VALUES (14, 6, NULL, 4, '尝试了不同光线条件下的拍摄，理解了光线对摄影的重要性。', 'https://images.unsplash.com/photo-1500531279542-fc8490c8ea4d', '2025-05-16 15:42:50');
 INSERT INTO `progress` VALUES (15, 8, NULL, 5, '学习了基本的食材处理和刀工技巧，为烹饪打下基础。', 'https://images.unsplash.com/photo-1556910103-1c02745aae4d', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (16, 1, 1, 2, 'xixi', NULL, '2025-05-18 02:26:47');
+INSERT INTO `progress` VALUES (17, 1, 1, 2, 'wanc', NULL, '2025-05-18 02:27:20');
+INSERT INTO `progress` VALUES (18, 1, 2, 2, 'xixi', NULL, '2025-05-18 02:31:12');
+INSERT INTO `progress` VALUES (19, 1, 2, 2, 'haha', NULL, '2025-05-18 02:34:05');
 
 -- ----------------------------
 -- Table structure for resource
@@ -426,17 +427,16 @@ CREATE TABLE `task`  (
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
   INDEX `idx_parent_task_id`(`parent_task_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 36 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '任务表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 40 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '任务表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of task
 -- ----------------------------
-INSERT INTO `task` VALUES (1, 1, 2, '制定英语学习计划', '确定学习目标、资源和时间安排', 2, 1, '2023-10-01', '2023-10-07', '2023-10-05 00:00:00', NULL, NULL, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `task` VALUES (2, 1, 2, '每天背诵20个英语单词', '使用单词卡片或App辅助记忆', 1, 2, '2023-10-08', '2024-12-31', NULL, '2023-10-08 08:00:00', NULL, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
+INSERT INTO `task` VALUES (1, 1, 2, '制定英语学习计划', '确定学习目标、资源和时间安排', 2, 1, '2023-10-01', '2023-10-07', '2025-05-18 00:00:00', NULL, NULL, '2025-05-16 15:42:50', '2025-05-18 05:56:01');
+INSERT INTO `task` VALUES (2, 1, 2, '每天背诵20个英语单词', '使用单词卡片或App辅助记忆', 2, 2, '2023-10-08', '2024-12-31', '2025-05-18 00:00:00', '2023-10-08 08:00:00', NULL, '2025-05-16 15:42:50', '2025-05-18 05:56:18');
 INSERT INTO `task` VALUES (3, 1, 2, '每周观看2部英语原版电影', '不看字幕，专注听力理解', 1, 3, '2023-10-08', '2024-12-31', NULL, '2023-10-14 20:00:00', NULL, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `task` VALUES (4, 1, 2, '参加线上英语角活动', '每周一次，与外国人交流', 1, 2, '2023-10-15', '2024-12-31', NULL, '2023-10-15 19:00:00', NULL, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
+INSERT INTO `task` VALUES (4, 1, 2, '参加线上英语角活动', '每周一次，与外国人交流', 0, 2, '2023-10-15', '2024-12-31', NULL, '2023-10-15 19:00:00', NULL, '2025-05-16 15:42:50', '2025-05-16 19:25:31');
 INSERT INTO `task` VALUES (5, 1, 2, '报名英语培训班', '选择适合自己的英语培训机构并报名', 2, 2, '2023-10-10', '2023-10-20', '2023-10-18 00:00:00', NULL, NULL, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `task` VALUES (6, 2, 2, '制定跑步训练计划', '根据个人情况制定合理的训练计划', 2, 1, '2023-11-01', '2023-11-07', '2023-11-05 00:00:00', NULL, NULL, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
 INSERT INTO `task` VALUES (7, 2, 2, '每周慢跑3次，每次5公里', '建立基础耐力', 1, 2, '2023-11-08', '2024-01-31', NULL, '2023-11-08 18:00:00', NULL, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
 INSERT INTO `task` VALUES (8, 2, 2, '每周进行一次长距离跑', '逐渐增加距离，适应长时间跑步', 1, 2, '2023-12-01', '2024-06-15', NULL, '2023-12-02 08:00:00', NULL, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
 INSERT INTO `task` VALUES (9, 2, 2, '参加半程马拉松比赛', '获取比赛经验', 0, 2, '2024-03-01', '2024-03-31', NULL, NULL, NULL, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
@@ -456,16 +456,19 @@ INSERT INTO `task` VALUES (22, 5, 4, '创建详细的人物设定', '设计主�
 INSERT INTO `task` VALUES (23, 5, 4, '完成小说大纲', '规划小说的章节和发展脉络', 0, 1, '2024-01-01', '2024-01-31', NULL, NULL, NULL, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
 INSERT INTO `task` VALUES (24, 5, 4, '每周写作5000字', '保持稳定的写作进度', 0, 2, '2024-02-01', '2024-10-31', NULL, NULL, NULL, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
 INSERT INTO `task` VALUES (25, 5, 4, '寻找出版机会', '联系文学杂志或出版社', 0, 3, '2024-11-01', '2024-12-31', NULL, NULL, NULL, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `task` VALUES (26, 1, 2, '英语口语练习与外教对话', '通过在线平台与外教进行30分钟英语口语练习，重点训练日常对话和商务表达', 0, 1, '2025-05-16', '2025-05-16', NULL, '2025-05-16 18:00:00', NULL, '2025-05-16 08:00:00', '2025-05-16 08:00:00');
-INSERT INTO `task` VALUES (27, 2, 2, '完成10公里长跑训练', '配速控制在6分钟/公里，重点关注呼吸节奏和步频', 0, 2, '2025-05-16', '2025-05-16', NULL, '2025-05-16 17:30:00', NULL, '2025-05-16 08:30:00', '2025-05-16 08:30:00');
+INSERT INTO `task` VALUES (26, 1, 2, '英语口语练习与外教对话', '通过在线平台与外教进行30分钟英语口语练习，重点训练日常对话和商务表达', 2, 1, '2025-05-16', '2025-05-16', '2025-05-18 00:00:00', '2025-05-16 18:00:00', NULL, '2025-05-16 08:00:00', '2025-05-18 05:50:58');
+INSERT INTO `task` VALUES (27, 2, 2, '完成10公里长跑训练', '配速控制在6分钟/公里，重点关注呼吸节奏和步频', 2, 2, '2025-05-16', '2025-05-16', '2025-05-16 00:00:00', '2025-05-16 17:30:00', NULL, '2025-05-16 08:30:00', '2025-05-16 19:25:25');
 INSERT INTO `task` VALUES (28, 3, 3, 'Python数据分析练习', '使用Pandas库处理CSV数据集，完成数据清洗和基础分析', 1, 1, '2025-05-15', '2025-05-17', NULL, '2025-05-16 14:00:00', NULL, '2025-05-15 09:00:00', '2025-05-15 09:00:00');
 INSERT INTO `task` VALUES (29, 8, 5, '学习法式煎蛋卷技巧', '观看教学视频并实践制作法式煎蛋卷，注意火候控制和翻面技巧', 0, 2, '2025-05-16', '2025-05-16', NULL, '2025-05-16 11:00:00', NULL, '2025-05-16 07:00:00', '2025-05-16 07:00:00');
 INSERT INTO `task` VALUES (30, 6, 4, '室外人像摄影练习', '在自然光条件下拍摄人像，尝试不同光线角度和构图方式', 0, 2, '2025-05-16', '2025-05-16', NULL, '2025-05-16 16:00:00', NULL, '2025-05-16 08:15:00', '2025-05-16 08:15:00');
-INSERT INTO `task` VALUES (31, 1, 2, '准备英语演讲稿', '为下周的英语演讲比赛准备3分钟的主题演讲稿，主题为\"科技与未来\"', 0, 1, '2025-05-14', '2025-05-18', NULL, '2025-05-17 20:00:00', NULL, '2025-05-14 10:00:00', '2025-05-14 10:00:00');
+INSERT INTO `task` VALUES (31, 1, 2, '准备英语演讲稿', '为下周的英语演讲比赛准备3分钟的主题演讲稿，主题为\"科技与未来\"', 1, 1, '2025-05-14', '2025-05-18', NULL, '2025-05-17 20:00:00', NULL, '2025-05-14 10:00:00', '2025-05-18 02:50:02');
 INSERT INTO `task` VALUES (32, 5, 4, '完成小说第一章修改', '根据编辑反馈修改小说第一章内容，重点完善人物对话和场景描写', 0, 2, '2025-05-13', '2025-05-19', NULL, '2025-05-17 22:00:00', NULL, '2025-05-13 11:30:00', '2025-05-13 11:30:00');
 INSERT INTO `task` VALUES (33, 3, 3, '完成Web爬虫项目', '优化爬虫性能并添加数据存储功能，确保能稳定抓取目标网站内容', 1, 1, '2025-05-10', '2025-05-20', NULL, '2025-05-18 23:59:00', NULL, '2025-05-10 14:00:00', '2025-05-10 14:00:00');
 INSERT INTO `task` VALUES (34, 7, 5, '制定创业商业计划书', '完成创业项目的商业计划书初稿，包括市场分析、运营模式和财务预测', 1, 1, '2025-05-01', '2025-05-30', NULL, '2025-05-25 18:00:00', NULL, '2025-05-01 09:00:00', '2025-05-01 09:00:00');
 INSERT INTO `task` VALUES (35, 4, 3, '完成欧洲旅行预算规划', '制定详细的欧洲五国旅行预算，包括交通、住宿、餐饮和景点门票等费用', 1, 2, '2025-05-05', '2025-05-25', NULL, '2025-05-20 20:00:00', NULL, '2025-05-05 16:30:00', '2025-05-05 16:30:00');
+INSERT INTO `task` VALUES (36, 1, 2, '复习英语单词50个', '使用Anki软件复习今天的50个新单词，重点是商务英语词汇', 0, 1, '2025-05-16', '2025-05-16', '2025-05-16 00:00:00', '2025-05-16 21:00:00', NULL, '2025-05-16 10:30:00', '2025-05-16 19:29:00');
+INSERT INTO `task` VALUES (37, 2, 2, '进行力量训练', '完成30分钟的力量训练，包括俯卧撑、深蹲和平板支撑', 0, 2, '2025-05-16', '2025-05-16', '2025-05-16 00:00:00', '2025-05-16 19:00:00', NULL, '2025-05-16 09:45:00', '2025-05-16 19:28:56');
+INSERT INTO `task` VALUES (38, 2, 2, '阅读马拉松训练书籍', '阅读《马拉松训练圣经》第3-5章，了解呼吸节奏控制方法', 0, 3, '2025-05-16', '2025-05-17', '2025-05-16 00:00:00', '2025-05-17 08:00:00', NULL, '2025-05-16 11:20:00', '2025-05-16 19:28:55');
 
 -- ----------------------------
 -- Table structure for user
@@ -493,10 +496,10 @@ CREATE TABLE `user`  (
 -- ----------------------------
 -- Records of user
 -- ----------------------------
-INSERT INTO `user` VALUES (1, 'admin', '$2a$10$IJ7ZCqW7mwP2Nvw2iSKXRuYiJA5pYlK.XKTYvd8OYDVOKoL1K94YS', '管理员', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde', 'admin@example.com', '13800000000', 1, '1990-01-01', '我是管理员', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `user` VALUES (2, 'zhangsan', '$2a$10$IJ7ZCqW7mwP2Nvw2iSKXRuYiJA5pYlK.XKTYvd8OYDVOKoL1K94YS', '张三', 'https://images.unsplash.com/photo-1527980965255-d3b416303d12', 'zhangsan@example.com', '13800000001', 1, '1992-05-20', '每天进步一点点', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `user` VALUES (3, 'lisi', '$2a$10$IJ7ZCqW7mwP2Nvw2iSKXRuYiJA5pYlK.XKTYvd8OYDVOKoL1K94YS', '李四', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330', 'lisi@example.com', '13800000002', 2, '1995-08-15', '追求梦想的道路上', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `user` VALUES (4, 'wangwu', '$2a$10$IJ7ZCqW7mwP2Nvw2iSKXRuYiJA5pYlK.XKTYvd8OYDVOKoL1K94YS', '王五', 'https://images.unsplash.com/photo-1599566150163-29194dcaad36', 'wangwu@example.com', '13800000003', 1, '1998-12-05', '不忘初心，方得始终', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `user` VALUES (5, 'zhaoliu', '$2a$10$IJ7ZCqW7mwP2Nvw2iSKXRuYiJA5pYlK.XKTYvd8OYDVOKoL1K94YS', '赵六', 'https://images.unsplash.com/photo-1607746882042-944635dfe10e', 'zhaoliu@example.com', '13800000004', 2, '1996-03-10', '努力奋斗，实现梦想', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
+INSERT INTO `user` VALUES (1, 'admin', '$2a$10$JJtFy15D9xQm4Sg.Mx43xOPgl6Q4L15krdpRMJXMDww6pvEvEfpym', '管理员', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde', 'admin@example.com', '13800000000', 1, '1990-01-01', '我是管理员', 1, '2025-05-16 15:42:50', '2025-05-22 18:32:46');
+INSERT INTO `user` VALUES (2, 'zhangsan', '$2a$10$JJtFy15D9xQm4Sg.Mx43xOPgl6Q4L15krdpRMJXMDww6pvEvEfpym', '张三', 'https://images.unsplash.com/photo-1527980965255-d3b416303d12', 'zhangsan@example.com', '13800000001', 1, '1992-05-20', '每天进步一点点', 1, '2025-05-16 15:42:50', '2025-05-22 18:32:47');
+INSERT INTO `user` VALUES (3, 'lisi', '$2a$10$JJtFy15D9xQm4Sg.Mx43xOPgl6Q4L15krdpRMJXMDww6pvEvEfpym', '李四', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330', 'lisi@example.com', '13800000002', 2, '1995-08-15', '追求梦想的道路上', 1, '2025-05-16 15:42:50', '2025-05-22 18:32:48');
+INSERT INTO `user` VALUES (4, 'wangwu', '$2a$10$JJtFy15D9xQm4Sg.Mx43xOPgl6Q4L15krdpRMJXMDww6pvEvEfpym', '王五', 'https://images.unsplash.com/photo-1599566150163-29194dcaad36', 'wangwu@example.com', '13800000003', 1, '1998-12-05', '不忘初心，方得始终', 1, '2025-05-16 15:42:50', '2025-05-22 18:32:48');
+INSERT INTO `user` VALUES (5, 'zhaoliu', '$2a$10$JJtFy15D9xQm4Sg.Mx43xOPgl6Q4L15krdpRMJXMDww6pvEvEfpym', '赵六', 'https://images.unsplash.com/photo-1607746882042-944635dfe10e', 'zhaoliu@example.com', '13800000004', 2, '1996-03-10', '努力奋斗，实现梦想', 1, '2025-05-16 15:42:50', '2025-05-22 18:33:05');
 
 SET FOREIGN_KEY_CHECKS = 1;

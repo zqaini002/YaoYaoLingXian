@@ -251,4 +251,48 @@ export type RequestParams = Record<string, string | number | boolean | undefined
  * 查询参数类型
  * ArkTS不支持索引签名，使用Record类型代替
  */
-export type QueryParams = Record<string, string | number | boolean | undefined | null>; 
+export type QueryParams = Record<string, string | number | boolean | undefined | null>;
+
+/**
+ * 用户登录参数
+ */
+export interface LoginParams {
+  username: string;
+  password: string;
+}
+
+/**
+ * 用户注册参数
+ */
+export interface RegisterParams {
+  username: string;
+  password: string;
+  nickname: string;
+  email?: string;
+  phone?: string;
+}
+
+/**
+ * 认证响应
+ */
+export interface AuthResponse {
+  user: UserInfo;
+  token: string;
+}
+
+/**
+ * 用户信息
+ */
+export interface UserInfo {
+  id: number;
+  username: string;
+  nickname: string;
+  avatar: string;
+  email?: string;
+  phone?: string;
+  gender?: number;
+  birthday?: string;
+  signature?: string;
+  status?: number;
+  token?: string;
+} 

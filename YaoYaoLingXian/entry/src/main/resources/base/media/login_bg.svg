@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="375px" height="812px" viewBox="0 0 375 812" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>login_bg</title>
+    <defs>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="loginGradient">
+            <stop stop-color="#1976d2" offset="0%"></stop>
+            <stop stop-color="#64b5f6" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="bgGradient">
+            <stop stop-color="#FFFFFF" offset="0%"></stop>
+            <stop stop-color="#F5F7FA" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="login_bg" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <!-- 背景 -->
+        <rect id="bg" fill="url(#bgGradient)" x="0" y="0" width="375" height="812"></rect>
+        
+        <!-- 顶部渐变形状 -->
+        <path d="M0,0 L375,0 L375,320 C273.333333,286.666667 178.333333,308.333333 90,385 C45.8333333,423.333333 0,440 0,320 L0,0 Z" id="top" fill="url(#loginGradient)" opacity="0.9"></path>
+        
+        <!-- 底部渐变形状 -->
+        <path d="M375,812 L0,812 L0,632 C75,692 150,700 225,656 C300,612 337.5,594 375,602 L375,812 Z" id="bottom" fill="url(#loginGradient)" opacity="0.6"></path>
+        
+        <!-- 装饰圆形1 -->
+        <circle id="circle1" fill="#FFFFFF" opacity="0.2" cx="50" cy="200" r="20"></circle>
+        
+        <!-- 装饰圆形2 -->
+        <circle id="circle2" fill="#FFFFFF" opacity="0.1" cx="320" cy="150" r="40"></circle>
+        
+        <!-- 装饰圆形3 -->
+        <circle id="circle3" fill="#FFFFFF" opacity="0.1" cx="280" cy="650" r="30"></circle>
+        
+        <!-- 装饰线条1 -->
+        <path d="M30,300 C50,320 70,310 90,330" id="line1" stroke="#FFFFFF" stroke-width="2" opacity="0.3" stroke-linecap="round"></path>
+        
+        <!-- 装饰线条2 -->
+        <path d="M320,400 C340,420 360,410 380,430" id="line2" stroke="#FFFFFF" stroke-width="2" opacity="0.2" stroke-linecap="round"></path>
+    </g>
+</svg> 

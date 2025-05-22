@@ -1,6 +1,8 @@
 {
   "src": [
     "pages/Index",
+    "pages/auth/LoginPage",
+    "pages/auth/RegisterPage",
     "pages/task/TaskEditPage",
     "pages/dream/DreamEditPage",
     "pages/task/TaskProgressPage",

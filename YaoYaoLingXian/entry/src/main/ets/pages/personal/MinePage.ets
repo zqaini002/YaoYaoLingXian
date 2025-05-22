@@ -2,40 +2,44 @@ import { CommonConstants, User, DreamStats, ApiResponse } from '../../model/Comm
 import { AppIcons } from '../../utils/IconUtils';
 import http from '@ohos.net.http';
 import * as ApiService from '../../services/ApiService';
+import router from '@ohos.router';
+import promptAction from '@ohos.promptAction';
+import { UserSession } from '../../utils/auth/UserSession';
 
 @Component
 export struct MinePage {
   @State userInfo: User = {
-    id: 2,
-    username: 'zhangsan',
-    nickname: '张三',
-    avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12',
-    bio: '每天进步一点点',
-    followersCount: 15,
-    followingCount: 10,
-    createdAt: '2023-01-01'
+    id: 0,
+    username: '',
+    nickname: '',
+    avatar: '',
+    bio: '',
+    followersCount: 0,
+    followingCount: 0,
+    createdAt: ''
   };
 
   @State dreamStats: DreamStats = {
-    userId: 2,
-    totalDreams: 8,
-    inProgressDreams: 5,
-    completedDreams: 2,
-    abandonedDreams: 1,
-    dreamCompletionRate: 25,
-    totalTasks: 20,
-    completedTasks: 10,
-    taskCompletionRate: 50
+    userId: 0,
+    totalDreams: 0,
+    inProgressDreams: 0,
+    completedDreams: 0,
+    abandonedDreams: 0,
+    dreamCompletionRate: 0,
+    totalTasks: 0,
+    completedTasks: 0,
+    taskCompletionRate: 0
   };
 
   @State menuItems: string[] = ['进度记录', '收藏资源', '消息通知', '设置', '帮助与反馈'];
   @State menuRoutes: string[] = ['progress', 'favorites', 'notifications', 'settings', 'help'];
   @State loading: boolean = false;
   @State dataError: string = '';
+  private userSession: UserSession = UserSession.getInstance();
 
   aboutToAppear() {
     // 获取当前用户ID (这里使用固定值，实际应从用户登录信息获取)
-    const userId = 2;
+    const userId = this.userSession.getUserId();
     this.fetchUserInfo(userId);
     this.fetchDreamStats(userId);
   }
@@ -102,6 +106,60 @@ export struct MinePage {
           taskCompletionRate: 0
         };
       }
+    }
+  }
+
+  // 退出登录处理函数
+  async handleLogout() {
+    try {
+      // 显示确认对话框
+      const result = await promptAction.showDialog({
+        title: '退出登录',
+        message: '确定要退出登录吗？',
+        buttons: [
+          {
+            text: '取消',
+            color: $r('app.color.text_primary')
+          },
+          {
+            text: '确定',
+            color: $r('app.color.logout_text')
+          }
+        ]
+      });
+      
+      // 用户点击了确定按钮
+      if (result.index === 1) {
+        // 显示加载提示
+        this.loading = true;
+        
+        try {
+          // 调用退出登录API
+          await this.userSession.logout();
+          
+          // 显示成功提示
+          promptAction.showToast({
+            message: '已成功退出登录',
+            duration: 2000
+          });
+          
+          // 跳转到登录页面
+          setTimeout(() => {
+            router.replaceUrl({
+              url: 'pages/auth/LoginPage'
+            });
+          }, 500);
+        } catch (error) {
+          promptAction.showToast({
+            message: `退出登录失败: ${error instanceof Error ? error.message : String(error)}`,
+            duration: 3000
+          });
+        } finally {
+          this.loading = false;
+        }
+      }
+    } catch (error) {
+      console.error(`显示退出确认框失败: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -345,6 +403,7 @@ export struct MinePage {
           .backgroundColor($r('app.color.logout_background'))
           .borderRadius(CommonConstants.RADIUS_NORMAL)
           .margin({ top: CommonConstants.MARGIN_LARGE, bottom: CommonConstants.MARGIN_XLARGE })
+          .onClick(() => this.handleLogout())
         
         // 版本信息
         Text('梦想生活规划师 v1.0.0')

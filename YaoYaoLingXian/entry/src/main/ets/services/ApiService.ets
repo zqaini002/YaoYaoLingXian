@@ -3,7 +3,7 @@
  */
 
 import http from '@ohos.net.http';
-import { RequestMethod, ApiResponse, PageResponse, Dream, Task, DreamStats, QueryParams, HomePageData, RequestParams, Post, Comment } from '../model/CommonTypes';
+import { RequestMethod, ApiResponse, PageResponse, Dream, Task, DreamStats, QueryParams, HomePageData, RequestParams, Post, Comment, LoginParams, RegisterParams, AuthResponse, UserInfo } from '../model/CommonTypes';
 
 /**
  * 帖子API数据结构
@@ -161,6 +161,13 @@ export interface RequestData {
   // 图片数组
   images?: string[];
   imageUrls?: string[];
+  
+  // 用户认证相关字段
+  username?: string;
+  password?: string;
+  nickname?: string;
+  email?: string;
+  phone?: string;
 }
 
 /**
@@ -836,5 +843,147 @@ export function deleteDream(id: number): Promise<void> {
     console.error(errorMsg);
     console.error(`梦想ID: ${id}`);
     throw new Error(errorMsg);
+  }
+}
+
+/**
+ * 用户相关API
+ */
+
+// 登录请求接口
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+// 登录响应接口
+export interface LoginResponse {
+  id: number;
+  username: string;
+  nickname: string;
+  avatar: string;
+  token: string;
+}
+
+// 注册请求接口
+export interface RegisterRequest {
+  username: string;
+  password: string;
+  nickname?: string;
+  email?: string;
+  phone?: string;
+}
+
+/**
+ * 用户登录
+ * 
+ * @param params 登录参数
+ * @returns 登录结果Promise
+ */
+export async function login(params: LoginParams): Promise<ApiResponse<AuthResponse>> {
+  console.info('登录请求参数:', JSON.stringify(params));
+  try {
+    // 将LoginParams转换为RequestData类型
+    const requestData: RequestData = {
+      username: params.username,
+      password: params.password
+    };
+    
+    const response = await request<ApiResponse<AuthResponse>>(
+      RequestMethod.POST,
+      '/auth/login',
+      EmptyParams,
+      requestData
+    );
+    console.info('登录响应:', JSON.stringify(response));
+    return response;
+  } catch (error) {
+    console.error('登录失败:', error);
+    throw new Error(error)
+  }
+}
+
+/**
+ * 用户注册
+ * 
+ * @param params 注册参数
+ * @returns 注册结果Promise
+ */
+export async function register(params: RegisterParams): Promise<ApiResponse<AuthResponse>> {
+  console.info('注册请求参数:', JSON.stringify(params));
+  try {
+    // 将RegisterParams转换为RequestData类型
+    const requestData: RequestData = {
+      username: params.username,
+      password: params.password,
+      nickname: params.nickname,
+      email: params.email,
+      phone: params.phone
+    };
+    
+    const response = await request<ApiResponse<AuthResponse>>(
+      RequestMethod.POST,
+      '/auth/register',
+      EmptyParams,
+      requestData
+    );
+    console.info('注册响应:', JSON.stringify(response));
+    return response;
+  } catch (error) {
+    console.error('注册失败:', error);
+    throw new Error(error)
+  }
+}
+
+/**
+ * 检查用户名是否可用
+ * 
+ * @param username 用户名
+ * @returns 检查结果Promise
+ */
+export async function checkUsername(username: string): Promise<ApiResponse<boolean>> {
+  console.info('检查用户名:', username);
+  try {
+    // 创建一个符合QueryParams类型的对象
+    const queryParams: QueryParams = {};
+    queryParams['username'] = username;
+    
+    const response = await request<ApiResponse<boolean>>(
+      RequestMethod.GET,
+      '/auth/check-username',
+      queryParams
+    );
+    console.info('检查用户名响应:', JSON.stringify(response));
+    return response;
+  } catch (error) {
+    console.error('检查用户名失败:', error);
+    throw new Error(error)
+  }
+}
+
+/**
+ * 用户登出
+ * 
+ * @returns 登出结果Promise
+ */
+export async function logout(): Promise<ApiResponse<void>> {
+  console.info('发起登出请求');
+  try {
+    const response = await request<ApiResponse<void>>(
+      RequestMethod.POST,
+      '/auth/logout',
+      EmptyParams
+    );
+    console.info('登出响应:', JSON.stringify(response));
+    return response;
+  } catch (error) {
+    console.error('登出请求失败:', error);
+    // 登出功能即使失败也应该允许用户登出
+    // 返回模拟的成功响应
+    return {
+      code: 200,
+      message: '登出成功',
+      data: undefined
+    };
   }
 }

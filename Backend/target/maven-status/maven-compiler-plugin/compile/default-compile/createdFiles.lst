@@ -19,6 +19,7 @@ com\dreamplanner\dto\ResourceDTO$ResourceDTOBuilder.class
 com\dreamplanner\service\impl\DreamServiceImpl.class
 com\dreamplanner\dto\TaskDTO$TaskDTOBuilder.class
 com\dreamplanner\entity\Comment.class
+com\dreamplanner\service\AuthService.class
 com\dreamplanner\exception\ResourceNotFoundException.class
 com\dreamplanner\dto\PostDTO.class
 com\dreamplanner\entity\Follow$FollowBuilder.class
@@ -32,9 +33,9 @@ com\dreamplanner\dto\TaskDTO.class
 com\dreamplanner\repository\TaskRepository.class
 com\dreamplanner\common\ApiResponse.class
 com\dreamplanner\entity\DreamTag.class
+com\dreamplanner\dto\LoginDTO.class
 com\dreamplanner\entity\User.class
 com\dreamplanner\service\impl\ProgressServiceImpl.class
-com\dreamplanner\config\SecurityConfig.class
 com\dreamplanner\dto\DreamDTO.class
 com\dreamplanner\service\DreamService.class
 com\dreamplanner\vo\PostVO.class
@@ -43,11 +44,13 @@ com\dreamplanner\dto\UserDTO.class
 com\dreamplanner\dto\PageResponseDTO.class
 com\dreamplanner\repository\CommentRepository.class
 com\dreamplanner\dto\PageResponseDTO$PageResponseDTOBuilder.class
+com\dreamplanner\service\impl\UserDetailsServiceImpl.class
 com\dreamplanner\dto\ApiResponseDTO$ApiResponseDTOBuilder.class
 com\dreamplanner\controller\PostController.class
 com\dreamplanner\DreamPlannerApplication.class
 com\dreamplanner\repository\FollowRepository.class
 com\dreamplanner\exception\BusinessException.class
+com\dreamplanner\util\JwtUtil.class
 com\dreamplanner\entity\Follow.class
 com\dreamplanner\dto\UserDTO$UserDTOBuilder.class
 com\dreamplanner\entity\Dream.class
@@ -55,8 +58,10 @@ com\dreamplanner\service\impl\HomeServiceImpl.class
 com\dreamplanner\dto\ApiResponseDTO.class
 com\dreamplanner\dto\ProgressDTO$ProgressDTOBuilder.class
 com\dreamplanner\entity\Task.class
+com\dreamplanner\dto\RegisterDTO.class
 com\dreamplanner\service\ProgressService.class
 com\dreamplanner\dto\DreamStatsDTO.class
+com\dreamplanner\controller\AuthController.class
 com\dreamplanner\config\CorsConfig.class
 com\dreamplanner\entity\Dream$DreamBuilder.class
 com\dreamplanner\entity\Resource.class

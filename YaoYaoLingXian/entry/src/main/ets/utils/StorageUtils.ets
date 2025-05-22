@@ -1,5 +1,5 @@
 import dataPreferences from '@ohos.data.preferences';
-import { getContext } from '@ohos.application.ability';
+import Ability  from '@ohos.app.ability.UIAbility';
 
 // 存储名称
 const PREFERENCES_NAME = 'yao_yao_ling_xian_prefs';
