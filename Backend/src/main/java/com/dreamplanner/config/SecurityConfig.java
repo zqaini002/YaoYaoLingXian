@@ -72,11 +72,21 @@ public class SecurityConfig {
             try {
                 // 从请求头获取JWT
                 String jwt = parseJwt(request);
+                System.out.println("请求URI: " + request.getRequestURI());
+                System.out.println("Authorization头: " + request.getHeader("Authorization"));
+                System.out.println("解析的JWT: " + (jwt != null ? "有效" : "无效"));
+                
                 if (jwt != null) {
                     String username = jwtUtil.getUsernameFromToken(jwt);
+                    System.out.println("从JWT中提取的用户名: " + username);
                     
-                    if (username != null && org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() == null) {
+                    // 修改判断逻辑，只要有用户名就尝试设置认证信息
+                    if (username != null) {
+                        // 检查SecurityContext是否已有认证
+                        if (org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() == null) {
+                            System.out.println("SecurityContext中无认证信息，开始设置认证");
                         org.springframework.security.core.userdetails.UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                            System.out.println("加载的用户详情: " + userDetails.getUsername());
                         
                         if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
                             org.springframework.security.authentication.UsernamePasswordAuthenticationToken authentication = 
@@ -86,11 +96,22 @@ public class SecurityConfig {
                             authentication.setDetails(new org.springframework.security.web.authentication.WebAuthenticationDetailsSource().buildDetails(request));
                             
                             org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(authentication);
+                                System.out.println("用户认证成功，SecurityContext已更新");
+                            } else {
+                                System.out.println("JWT验证失败");
+                            }
+                        } else {
+                            System.out.println("SecurityContext中已有认证信息");
                         }
-                    }
+                    } else {
+                        System.out.println("从JWT中提取的用户名为空");
+                        }
+                } else {
+                    System.out.println("请求中无JWT令牌");
                 }
             } catch (Exception e) {
-                System.err.println("认证失败: " + e.getMessage());
+                System.err.println("认证过程出现错误: " + e.getMessage());
+                e.printStackTrace();
             }
             
             filterChain.doFilter(request, response);
@@ -116,9 +137,9 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/api/auth/**", "/api/auth/login", "/api/auth/register", "/api/auth/check-username").permitAll()
-                .requestMatchers("/files/**").permitAll()
-                .requestMatchers("/posts/public/**").permitAll()
+                .requestMatchers("/api/auth/**", "/auth/**").permitAll()
+                .requestMatchers("/api/files/**", "/files/**").permitAll()
+                .requestMatchers("/api/posts/public/**", "/posts/public/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

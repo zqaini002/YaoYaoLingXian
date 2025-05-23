@@ -1,9 +1,10 @@
-/**
+﻿/**
  * API服务类，用于封装对后端接口的调用
  */
 
 import http from '@ohos.net.http';
 import { RequestMethod, ApiResponse, PageResponse, Dream, Task, DreamStats, QueryParams, HomePageData, RequestParams, Post, Comment, LoginParams, RegisterParams, AuthResponse, UserInfo } from '../model/CommonTypes';
+import { UserSession } from '../utils/auth/UserSession';
 
 /**
  * 帖子API数据结构
@@ -202,8 +203,11 @@ export interface SearchParams extends QueryParams {
  * @returns 响应数据
  */
 export async function request<T>(method: RequestMethod, endpoint: string, params: QueryParams = {}, data: RequestData = {}): Promise<T> {
+  // 确保endpoint以/开头，避免BASE_URL末尾的/api与endpoint之间缺少分隔符
+  const formattedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  
   // 构建URL
-  let url = `${BASE_URL}${endpoint}`;
+  let url = `${BASE_URL}${formattedEndpoint}`;
 
   // 处理查询参数
   if (Object.keys(params).length > 0) {
@@ -230,6 +234,16 @@ export async function request<T>(method: RequestMethod, endpoint: string, params
       'Content-Type': 'application/json',
       'Accept': 'application/json'
     };
+    
+    // 添加用户认证令牌
+    const userSession = UserSession.getInstance();
+    if (userSession && userSession.isLoggedIn()) {
+      const token = userSession.getToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.info('已添加用户认证令牌到请求');
+      }
+    }
     
     const options: RequestOptions = {
       method: method,
@@ -380,12 +394,7 @@ export function getUpcomingTasks(userId: number, days: number = 7, page: number 
  * @returns 梦想列表
  */
 export function getDreamsByUserId(userId: number): Promise<Dream[]> {
-  try {
-    return request<Dream[]>(RequestMethod.GET, `/dreams/user/${userId}`);
-  } catch (error) {
-    console.error(`获取用户梦想列表失败: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error(`获取用户梦想列表失败: ${error instanceof Error ? error.message : String(error)}`);
-  }
+  return request<Dream[]>(RequestMethod.GET, `dreams/user/${userId}`, EmptyParams);
 }
 
 /**
@@ -720,8 +729,30 @@ export function getPosts(page: number, size: number, type: number): Promise<Page
             }
             
             // 将后端返回的images字符串转换为前端需要的imageUrls数组
-            if (post.images && typeof post.images === 'string' && post.images.trim() !== '') {
-              post.imageUrls = post.images.split(',').filter(url => url && url.trim() !== '');
+            if (post.images) {
+              try {
+                // 安全处理：始终将images视为可能是任何类型，并转换为字符串
+                let imagesString = '';
+                
+                // 处理各种可能的类型情况
+                if (typeof post.images === 'string') {
+                  imagesString = post.images;
+                } else if (Array.isArray(post.images)) {
+                  imagesString = post.images.join(',');
+                } else if (post.images) {
+                  imagesString = String(post.images);
+                }
+                
+                // 安全地处理字符串
+                if (imagesString && imagesString.trim && imagesString.trim() !== '') {
+                  const urls = imagesString.trim().split(',');
+                  // 过滤出有效的URL
+                  post.imageUrls = urls.filter(url => url && typeof url === 'string' && url.trim() !== '');
+                }
+              } catch (error) {
+                console.error(`处理帖子图片时出错: ${error instanceof Error ? error.message : String(error)}`);
+                post.imageUrls = []; // 出错时确保imageUrls是空数组
+              }
             }
           });
         }
@@ -794,11 +825,24 @@ export function getPostComments(id: number, page: number, size: number): Promise
       size
     };
     
-    return request<Comment[]>(RequestMethod.GET, `/posts/${id}/comments`, params as QueryParams);
+    // 确保路径以"/"开头，修复URL结构
+    return request<ApiResponse<Comment[]>>(RequestMethod.GET, `/posts/${id}/comments`, params as QueryParams)
+      .then((response: ApiResponse<Comment[]>) => {
+        // 正确解析ApiResponse结构
+        if (response && response.data) {
+          return response.data || [];
+        }
+        return [];
+      })
+      .catch((error: Error) => {
+        // 如果API返回404或其他错误，记录日志但返回空数组，避免前端崩溃
+        console.warn(`评论API错误: ${error.message}, 返回空列表`);
+        return [] as Comment[];
+      });
   } catch (error) {
-    const errorMsg = `获取动态评论失败: ${error instanceof Error ? error.message : String(error)}`;
-    console.error(errorMsg);
-    throw new Error(errorMsg);
+    // 捕获其他可能的错误，仍然返回空数组
+    console.error(`获取动态评论失败: ${error instanceof Error ? error.message : String(error)}`);
+    return Promise.resolve([] as Comment[]);
   }
 }
 
@@ -810,19 +854,116 @@ export function getPostComments(id: number, page: number, size: number): Promise
  * @returns 创建的评论
  */
 export function createComment(postId: number, comment: Comment): Promise<Comment> {
+  // 获取当前用户会话
+  const userSession = UserSession.getInstance();
+  
+  // 确保用户已登录
+  if (!userSession.isLoggedIn()) {
+    console.error('用户未登录，无法发表评论');
+    return Promise.reject(new Error('用户未登录，请先登录'));
+  }
+
+  // 确保包含用户ID
+  const userId = userSession.getUserId();
+  if (!userId) {
+    console.error('无法获取当前登录用户ID');
+    return Promise.reject(new Error('无法获取用户ID，请重新登录'));
+  }
+  
+  // 记录详细的会话信息用于调试
+  console.info(`发表评论 - 详细验证信息:`);
+  console.info(`登录状态: ${userSession.isLoggedIn()}`);
+  console.info(`用户ID: ${userId}`);
+  console.info(`认证令牌: ${userSession.getToken()?.substring(0, 15)}...`);
+
+  // 构建评论数据 - 确保包含用户ID
+  const commentData: RequestData = {
+    content: comment.content,
+    parentId: comment.parentId || 0,
+    userId: userId // 明确使用会话中的用户ID
+  };
+
   try {
-    console.info(`发表评论, postId: ${postId}, content: ${comment.content}`);
-    // 将comment转为RequestData对象
-    const requestData: RequestData = {
-      id: comment.id,
-      postId: comment.postId,
-      userId: comment.userId,
-      content: comment.content,
-      parentId: comment.parentId
-    };
-    return request<Comment>(RequestMethod.POST, `/posts/${postId}/comments`, EmptyParams, requestData);
+    console.info(`尝试发表评论: postId=${postId}, userId=${commentData.userId}, content=${comment.content.substring(0, 20)}...`);
+    
+    // 确保路径以"/"开头
+    return request<ApiResponse<Comment>>(RequestMethod.POST, `/posts/${postId}/comments`, EmptyParams, commentData)
+      .then(response => {
+        // 记录完整响应
+        console.info(`评论API响应: ${JSON.stringify(response)}`);
+        
+        // 正确解析ApiResponse结构
+        if (response && response.data) {
+          console.info(`评论发表成功: id=${response.data.id}`);
+          return response.data;
+        }
+        throw new Error('服务器返回了无效的响应格式');
+      })
+      .catch((error: Error) => {
+        // 分析错误类型
+        const errorStr = error.message || '';
+        let friendlyMessage = '';
+        
+        if (errorStr.includes('404')) {
+          friendlyMessage = '评论功能尚未实现 (后端API返回404)';
+        } else if (errorStr.includes('401') || errorStr.includes('403') || errorStr.includes('未登录')) {
+          friendlyMessage = '没有权限发表评论，请先登录';
+        } else {
+          friendlyMessage = `评论发表失败: ${errorStr}`;
+        }
+        
+        console.warn(friendlyMessage);
+        
+        // 创建一个带有错误信息的错误对象
+        const enhancedError = new Error(friendlyMessage);
+        throw enhancedError;
+      });
   } catch (error) {
-    const errorMsg = `发表评论失败: ${error instanceof Error ? error.message : String(error)}`;
+    // 捕获其他可能的错误
+    const errorMsg = `评论发表失败: ${error instanceof Error ? error.message : String(error)}`;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+}
+
+/**
+ * 创建社区帖子
+ * 
+ * @param post 帖子信息
+ * @returns 创建的帖子信息
+ */
+export function createPost(post: Post): Promise<Post> {
+  // 创建明确类型的对象，避免结构化类型问题
+  const requestData: RequestData = {
+    title: post.title || '',
+    content: post.content || '',
+    dreamId: post.dreamId,
+    // 确保images作为数组传递
+    images: Array.isArray(post.images) ? post.images : []
+  };
+  
+  return request<Post>(RequestMethod.POST, '/posts', EmptyParams, requestData);
+}
+
+/**
+ * 获取帖子详情
+ * 
+ * @param id 帖子ID
+ * @returns 帖子详情
+ */
+export function getPostById(id: number): Promise<Post> {
+  try {
+    console.info(`获取帖子详情, id: ${id}`);
+    return request<Post>(RequestMethod.GET, `/posts/${id}`)
+      .then(post => {
+        // 处理帖子作者头像URL
+        if (post && post.author && post.author.avatar) {
+          post.author.avatar = processImageUrl(post.author.avatar);
+        }
+        return post;
+      });
+  } catch (error) {
+    const errorMsg = `获取帖子详情失败: ${error instanceof Error ? error.message : String(error)}`;
     console.error(errorMsg);
     throw new Error(errorMsg);
   }
@@ -899,7 +1040,7 @@ export async function login(params: LoginParams): Promise<ApiResponse<AuthRespon
     return response;
   } catch (error) {
     console.error('登录失败:', error);
-    throw new Error(error)
+    throw new Error(error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -931,7 +1072,7 @@ export async function register(params: RegisterParams): Promise<ApiResponse<Auth
     return response;
   } catch (error) {
     console.error('注册失败:', error);
-    throw new Error(error)
+    throw new Error(error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -957,7 +1098,7 @@ export async function checkUsername(username: string): Promise<ApiResponse<boole
     return response;
   } catch (error) {
     console.error('检查用户名失败:', error);
-    throw new Error(error)
+    throw new Error(error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -979,11 +1120,12 @@ export async function logout(): Promise<ApiResponse<void>> {
   } catch (error) {
     console.error('登出请求失败:', error);
     // 登出功能即使失败也应该允许用户登出
-    // 返回模拟的成功响应
-    return {
+    // 创建一个明确类型的响应对象
+    const mockResponse: ApiResponse<void> = {
       code: 200,
       message: '登出成功',
       data: undefined
     };
+    return mockResponse;
   }
 }

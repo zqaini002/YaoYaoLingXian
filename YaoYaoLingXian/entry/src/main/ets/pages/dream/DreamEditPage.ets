@@ -19,6 +19,7 @@ import UIAbility from '@ohos.app.ability.UIAbility';
 import featureAbility from '@ohos.ability.featureAbility'
 import { photoAccessHelper } from '@kit.MediaLibraryKit';
 import { UploadImageParams, deleteDream } from '../../services/ApiService';
+import { UserSession } from '../../utils/auth/UserSession';
 
 import type { UIContext } from '@kit.ArkUI';
 /**
@@ -301,7 +302,7 @@ interface MediaAssetDataHandlerInterface<T> {
 export struct DreamEditPage {
   @State dream: Dream = {
     id: 0,
-    userId: 2, // 默认用户ID为2
+    userId: 0, // 修改为0，从用户会话中获取
     title: '',
     description: '',
     category: '学习',
@@ -327,8 +328,32 @@ export struct DreamEditPage {
   @State isUploadingImage: boolean = false; // 图片上传状态
   @State selectedLocalImage: string = ''; // 已选本地图片路径
   
+  private userSession: UserSession = UserSession.getInstance();
+  
   aboutToAppear() {
     try {
+      // 从用户会话获取用户ID
+      if (this.userSession && this.userSession.isLoggedIn()) {
+        const userInfo = this.userSession.getCurrentUser();
+        if (userInfo && userInfo.id) {
+          this.dream.userId = userInfo.id;
+          console.info(`DreamEditPage: 从用户会话获取到用户ID ${this.dream.userId}`);
+        } else {
+          console.error('DreamEditPage: 用户已登录但无法获取用户ID');
+          const toastOpts: ToastOptions = { message: '获取用户信息失败，请重新登录' };
+          promptAction.showToast(toastOpts);
+        }
+      } else {
+        console.error('DreamEditPage: 用户未登录或会话未初始化');
+        const toastOpts: ToastOptions = { message: '用户未登录，请先登录' };
+        promptAction.showToast(toastOpts);
+        // 跳转到登录页面
+        router.replaceUrl({
+          url: 'pages/auth/LoginPage'
+        });
+        return;
+      }
+      
       // 初始化默认图片 - 设置一个固定的占位图URL
       if (!this.dream.imageUrl || this.dream.imageUrl.trim() === '') {
         this.dream.imageUrl = 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d'; // 使用占位图

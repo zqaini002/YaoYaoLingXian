@@ -32,7 +32,7 @@ export struct HomePage {
   private chartLabels: string[] = ['进行中', '已完成', '未开始'];
 
   @State dreamStats: DreamStats = {
-    userId: 1,
+    userId: 0,
     totalDreams: 0,
     inProgressDreams: 0,
     completedDreams: 0,

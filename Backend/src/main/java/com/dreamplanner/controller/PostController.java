@@ -9,6 +9,7 @@ import com.dreamplanner.vo.PostVO;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -190,6 +191,103 @@ public class PostController {
         } catch (Exception e) {
             log.error("点赞操作失败", e);
             return ApiResponse.error("点赞操作失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取帖子评论
+     *
+     * @param postId 帖子ID
+     * @param page 页码
+     * @param size 每页条数
+     * @return 评论列表
+     */
+    @GetMapping("/{postId}/comments")
+    public ApiResponse getPostComments(
+            @PathVariable Long postId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        try {
+            log.info("获取帖子评论请求: postId={}, page={}, size={}", postId, page, size);
+            
+            // 验证帖子是否存在
+            PostVO existingPost = postService.getPostVOById(postId);
+            if (existingPost == null) {
+                return ApiResponse.error("帖子不存在");
+            }
+            
+            List<?> comments = postService.getPostComments(
+                postId, 
+                PageRequest.of(page, size)
+            );
+            
+            log.info("获取帖子评论成功，共返回{}条评论", comments.size());
+            return ApiResponse.success(comments);
+        } catch (Exception e) {
+            log.error("获取帖子评论失败", e);
+            return ApiResponse.error("获取帖子评论失败：" + e.getMessage());
+        }
+    }
+    
+    /**
+     * 创建评论
+     *
+     * @param postId 帖子ID
+     * @param comment 评论内容
+     * @return 创建的评论
+     */
+    @PostMapping("/{postId}/comments")
+    public ApiResponse createComment(
+            @PathVariable Long postId,
+            @RequestBody com.dreamplanner.dto.CommentDTO comment) {
+        try {
+            log.info("创建评论请求: postId={}, comment={}", postId, comment);
+            
+            // 获取当前认证用户
+            org.springframework.security.core.Authentication authentication = 
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            
+            if (authentication != null) {
+                log.info("认证信息: principal={}, authenticated={}", 
+                    authentication.getPrincipal(),
+                    authentication.isAuthenticated());
+                
+                // 如果认证无效或是匿名用户
+                if ("anonymousUser".equals(authentication.getPrincipal())) {
+                    log.info("检测到匿名用户 - 使用commentDTO中的userId={}", comment.getUserId());
+                    
+                    // 确保commentDTO中有userId
+                    if (comment.getUserId() == null) {
+                        log.error("创建评论失败: 既无认证又无userId");
+                        return ApiResponse.error("请先登录后再评论");
+                    }
+                } else {
+                    // 获取用户详情，设置到CommentDTO中
+                    org.springframework.security.core.userdetails.UserDetails userDetails = 
+                        (org.springframework.security.core.userdetails.UserDetails) authentication.getPrincipal();
+                    log.info("认证用户名: {}", userDetails.getUsername());
+                    
+                    // 无需设置userId，后端服务会处理
+                }
+            } else {
+                log.error("创建评论失败: 无认证信息");
+                return ApiResponse.error("请先登录后再评论");
+            }
+            
+            // 验证帖子是否存在
+            PostVO existingPost = postService.getPostVOById(postId);
+            if (existingPost == null) {
+                return ApiResponse.error("帖子不存在");
+            }
+            
+            // 创建评论
+            Object newComment = postService.commentPost(postId, comment);
+            
+            log.info("创建评论成功");
+            return ApiResponse.success(newComment);
+        } catch (Exception e) {
+            log.error("创建评论失败", e);
+            return ApiResponse.error("创建评论失败：" + e.getMessage());
         }
     }
 } 

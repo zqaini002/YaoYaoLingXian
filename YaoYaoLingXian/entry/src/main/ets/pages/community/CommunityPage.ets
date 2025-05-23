@@ -4,6 +4,7 @@ import http from '@ohos.net.http';
 import * as ApiService from '../../services/ApiService';
 import promptAction from '@ohos.promptAction';
 import refresh from '@ohos.app.ability.common';
+import router from '@ohos.router';
 
 @Component
 export struct CommunityPage {
@@ -215,6 +216,12 @@ export struct CommunityPage {
           .height(24)
           .fillColor($r('app.color.text_primary'))
           .margin({ left: CommonConstants.MARGIN_LARGE })
+          .onClick(() => {
+            // 导航到发布帖子页面
+            router.pushUrl({
+              url: 'pages/community/PostCreatePage'
+            });
+          })
       }
       .width('100%')
       .justifyContent(FlexAlign.SpaceBetween)
@@ -538,6 +545,15 @@ export struct CommunityPage {
             .backgroundColor($r('app.color.card_background'))
             .borderRadius(CommonConstants.RADIUS_NORMAL)
             .margin({ bottom: CommonConstants.MARGIN_LARGE })
+            .onClick(() => {
+              // 导航到帖子详情页
+              router.pushUrl({
+                url: 'pages/community/PostDetailPage',
+                params: {
+                  postId: post.id
+                }
+              });
+            })
           })
           
           // 加载更多

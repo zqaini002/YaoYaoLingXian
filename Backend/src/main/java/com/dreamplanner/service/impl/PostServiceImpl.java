@@ -371,33 +371,48 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public CommentDTO commentPost(Long id, CommentDTO commentDTO) {
+        // 1. 尝试从SecurityContext获取当前用户
         User currentUser = getCurrentUser();
+        log.info("评论帖子 - 从SecurityContext获取用户: {}", currentUser != null ? currentUser.getUsername() : "未找到");
+
+        // 2. 如果SecurityContext中没有用户，尝试从评论DTO中获取userId
+        if (currentUser == null && commentDTO.getUserId() != null) {
+            log.info("尝试通过评论中的userId={}查找用户", commentDTO.getUserId());
+            currentUser = userRepository.findById(commentDTO.getUserId())
+                .orElse(null);
+            log.info("通过userId查找结果: {}", currentUser != null ? "找到用户" : "未找到用户");
+        }
+        
+        // 3. 如果仍然找不到用户，则抛出异常
         if (currentUser == null) {
+            log.error("评论失败: 无法确认用户身份");
             throw new IllegalStateException("用户未登录");
         }
         
+        // 4. 获取帖子
         Post post = postRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("动态不存在，ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("帖子不存在，ID: " + id));
         
+        // 5. 创建评论
         Comment comment = new Comment();
         comment.setPost(post);
         comment.setUser(currentUser);
         comment.setContent(commentDTO.getContent());
+        comment.setParentId(commentDTO.getParentId());
         comment.setStatus(1);
+        comment.setCreatedAt(LocalDateTime.now());
+        comment.setUpdatedAt(LocalDateTime.now());
         
-        // 处理回复的评论
-        if (commentDTO.getParentId() != null) {
-            Comment parentComment = commentRepository.findById(commentDTO.getParentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("回复的评论不存在，ID: " + commentDTO.getParentId()));
-            comment.setParent(parentComment);
-        }
-        
+        // 6. 保存评论
         Comment savedComment = commentRepository.save(comment);
+        log.info("评论保存成功, ID: {}", savedComment.getId());
         
-        // 更新动态评论数
+        // 7. 更新帖子评论数
         post.setCommentCount(post.getCommentCount() + 1);
         postRepository.save(post);
+        log.info("更新帖子评论数成功, 当前评论数: {}", post.getCommentCount());
         
+        // 8. 返回评论DTO
         return convertCommentToDTO(savedComment);
     }
 

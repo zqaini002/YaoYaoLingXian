@@ -22,6 +22,7 @@ com\dreamplanner\entity\Comment.class
 com\dreamplanner\service\AuthService.class
 com\dreamplanner\exception\ResourceNotFoundException.class
 com\dreamplanner\dto\PostDTO.class
+com\dreamplanner\config\SecurityConfig$JwtAuthenticationFilter.class
 com\dreamplanner\entity\Follow$FollowBuilder.class
 com\dreamplanner\repository\UserRepository.class
 com\dreamplanner\dto\CommentDTO$CommentDTOBuilder.class
@@ -36,6 +37,7 @@ com\dreamplanner\entity\DreamTag.class
 com\dreamplanner\dto\LoginDTO.class
 com\dreamplanner\entity\User.class
 com\dreamplanner\service\impl\ProgressServiceImpl.class
+com\dreamplanner\config\SecurityConfig.class
 com\dreamplanner\dto\DreamDTO.class
 com\dreamplanner\service\DreamService.class
 com\dreamplanner\vo\PostVO.class
@@ -85,3 +87,4 @@ com\dreamplanner\service\impl\TaskServiceImpl.class
 com\dreamplanner\entity\Task$TaskBuilder.class
 com\dreamplanner\entity\DreamResource$DreamResourceBuilder.class
 com\dreamplanner\entity\Post$PostBuilder.class
+com\dreamplanner\service\impl\AuthServiceImpl.class

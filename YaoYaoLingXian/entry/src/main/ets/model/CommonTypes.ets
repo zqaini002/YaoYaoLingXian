@@ -121,13 +121,12 @@ export interface Task {
  * 社区帖子模型
  */
 export interface Post {
-  userAvatar(userAvatar: undefined): undefined;
   id: number;
   userId: number;
   dreamId?: number;
   title: string;
   content: string;
-  images?: string;  // 添加images字段，用于接收后端返回的原始图片字符串
+  images?: string[];  // 确保定义为string[]类型
   imageUrls?: string[];  // 前端处理后的图片URL数组
   likeCount: number;
   commentCount: number;

@@ -8,6 +8,8 @@
     "pages/task/TaskProgressPage",
     "pages/task/RecommendTasksPage",
     "pages/dream/DreamDetailPage",
-    "pages/task/TaskDetailPage"
+    "pages/task/TaskDetailPage",
+    "pages/community/PostCreatePage",
+    "pages/community/PostDetailPage"
   ]
 } 

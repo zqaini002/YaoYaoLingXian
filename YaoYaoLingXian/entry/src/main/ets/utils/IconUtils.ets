@@ -31,6 +31,8 @@ export class AppIcons {
   static readonly time: string = '/common/icons/time.png';
   static readonly error: string = '/common/icons/error.png';
   static readonly empty: string = '/common/icons/empty.png';
+  static readonly image: string = '/common/icons/image.png';  // 添加图片图标
+  static readonly tag: string = '/common/icons/tag.png';  // 添加标签图标
   
   // 任务相关图标
   static readonly target: string = '/common/icons/target.png';

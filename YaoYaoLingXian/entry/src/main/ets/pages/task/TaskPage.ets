@@ -3,6 +3,7 @@ import { AppIcons } from '../../utils/IconUtils';
 import prompt from '@ohos.promptAction';
 import { getAllTasks, getTasksByStatus, updateTaskStatus, getTodayTasks, getUpcomingTasks, searchTasks } from '../../services/TaskService';
 import router from '@ohos.router';
+import { UserSession } from '../../utils/auth/UserSession';
 
 @Component
 export struct TaskPage {
@@ -10,7 +11,7 @@ export struct TaskPage {
   @State tabs: string[] = ['全部', '今日', '即将到期', '待开始', '进行中', '已完成', '已延期'];
   @State tasks: Task[] = [];
   @State isLoading: boolean = false;
-  @State userId: number = 2; // 假设当前用户ID为2，实际应用中应该从登录状态获取
+  @State userId: number = 0; // 修改为0，从用户会话中获取
   @State refreshing: boolean = false;
   @State currentPage: number = 0;
   @State pageSize: number = 20;
@@ -18,8 +19,35 @@ export struct TaskPage {
   @State searchKeyword: string = "";
   @State isSearchMode: boolean = false;
   @State upcomingDays: number = 7; // 默认展示7天内即将到期的任务
+  private userSession: UserSession = UserSession.getInstance();
   
   aboutToAppear() {
+    // 从用户会话获取用户ID
+    if (this.userSession && this.userSession.isLoggedIn()) {
+      const userInfo = this.userSession.getCurrentUser();
+      if (userInfo && userInfo.id) {
+        this.userId = userInfo.id;
+        console.info(`TaskPage: 从用户会话获取到用户ID ${this.userId}`);
+      } else {
+        console.error('TaskPage: 用户已登录但无法获取用户ID');
+        prompt.showToast({
+          message: '获取用户信息失败，请重新登录',
+          duration: 2000
+        });
+      }
+    } else {
+      console.error('TaskPage: 用户未登录或会话未初始化');
+      prompt.showToast({
+        message: '用户未登录，请先登录',
+        duration: 2000
+      });
+      // 可选：跳转到登录页面
+      router.replaceUrl({
+        url: 'pages/auth/LoginPage'
+      });
+      return;
+    }
+    
     this.loadTasks();
   }
   

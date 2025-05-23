@@ -350,14 +350,19 @@ export class UserSession {
   }
 
   /**
-   * 获取当前用户信息
+   * 获取当前登录用户信息
+   * 
+   * @returns 当前登录用户信息，未登录时返回null
    */
   public getCurrentUser(): UserInfo | null {
+    // 返回当前用户信息（可能为null）
     return this.currentUser;
   }
 
   /**
-   * 判断用户是否已登录
+   * 检查用户是否已登录
+   * 
+   * @returns 是否已登录
    */
   public isLoggedIn(): boolean {
     const isLoggedIn = this.currentUser !== null && !!this.currentUser.token;

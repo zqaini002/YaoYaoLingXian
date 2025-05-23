@@ -2,6 +2,8 @@ import { CommonConstants, Task, PageResponse } from '../../model/CommonTypes';
 import { AppIcons } from '../../utils/IconUtils';
 import * as ApiService from '../../services/ApiService';
 import router from '@ohos.router';
+import { UserSession } from '../../utils/auth/UserSession';
+import promptAction from '@ohos.promptAction';
 
 // 定义不带Entry装饰器的任务推荐页面组件
 @Component
@@ -9,9 +11,36 @@ struct RecommendTasksPageContent {
   @State tasks: Task[] = [];
   @State isLoading: boolean = true;
   @State dataError: string | null = null;
-  @State userId: number = 2; // 默认用户ID
+  @State userId: number = 0; // 修改为0，从用户会话中获取
+  private userSession: UserSession = UserSession.getInstance();
   
   aboutToAppear() {
+    // 从用户会话获取用户ID
+    if (this.userSession && this.userSession.isLoggedIn()) {
+      const userInfo = this.userSession.getCurrentUser();
+      if (userInfo && userInfo.id) {
+        this.userId = userInfo.id;
+        console.info(`RecommendTasksPage: 从用户会话获取到用户ID ${this.userId}`);
+      } else {
+        console.error('RecommendTasksPage: 用户已登录但无法获取用户ID');
+        promptAction.showToast({
+          message: '获取用户信息失败，请重新登录',
+          duration: 2000
+        });
+      }
+    } else {
+      console.error('RecommendTasksPage: 用户未登录或会话未初始化');
+      promptAction.showToast({
+        message: '用户未登录，请先登录',
+        duration: 2000
+      });
+      // 可选：跳转到登录页面
+      router.replaceUrl({
+        url: 'pages/auth/LoginPage'
+      });
+      return;
+    }
+    
     this.loadData();
   }
   

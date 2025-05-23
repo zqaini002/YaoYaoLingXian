@@ -98,36 +98,36 @@ struct Index {
       .justifyContent(FlexAlign.Center)
     } else if (this.isUserLoggedIn) {
       // 只有登录成功后才显示主内容
-      Column() {
-        // 主内容区域 - 使用Flex布局控制空间
-        Flex({ direction: FlexDirection.Column }) {
-          Swiper() {
-            HomePage()
-            DreamPage()
-            TaskPage()
-            CommunityPage()
-            MinePage()
-          }
-          .index(this.selectedIndex)
-          .indicator(false)
-          .loop(false)
-          .duration(300)
-          .onChange((index: number) => {
-            this.selectedIndex = index;
-          })
-          .width('100%')
-          .flexGrow(1)
+    Column() {
+      // 主内容区域 - 使用Flex布局控制空间
+      Flex({ direction: FlexDirection.Column }) {
+        Swiper() {
+          HomePage()
+          DreamPage()
+          TaskPage()
+          CommunityPage()
+          MinePage()
         }
+        .index(this.selectedIndex)
+        .indicator(false)
+        .loop(false)
+        .duration(300)
+        .onChange((index: number) => {
+          this.selectedIndex = index;
+        })
         .width('100%')
-        .height('calc(100% - 60px)') // 减去导航栏高度
-
-        // 底部导航栏
-        TabBar({ selectedIndex: this.selectedIndex })
-          .height(40)
-          .backgroundColor('#FFFFFF')
+        .flexGrow(1)
       }
       .width('100%')
-      .height('100%')
+      .height('calc(100% - 60px)') // 减去导航栏高度
+
+      // 底部导航栏
+        TabBar({ selectedIndex: this.selectedIndex })
+        .height(40)
+          .backgroundColor('#FFFFFF')
+    }
+    .width('100%')
+    .height('100%')
     }
   }
 }

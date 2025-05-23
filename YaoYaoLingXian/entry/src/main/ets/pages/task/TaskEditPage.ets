@@ -1039,18 +1039,18 @@ export struct TaskEditPage {
             })
         } else {
           // 创建模式：只显示保存按钮
-          Button('保存')
-            .width('100%')
-            .height(48)
-            .fontSize(CommonConstants.FONT_SIZE_NORMAL)
-            .fontWeight(FontWeight.Medium)
-            .backgroundColor($r('app.color.primary_color'))
-            .borderRadius(CommonConstants.RADIUS_NORMAL)
-            .enabled(!this.isSubmitting)
-            .stateEffect(true)
-            .onClick((): void => {
-              void this.saveTask();
-            })
+        Button('保存')
+          .width('100%')
+          .height(48)
+          .fontSize(CommonConstants.FONT_SIZE_NORMAL)
+          .fontWeight(FontWeight.Medium)
+          .backgroundColor($r('app.color.primary_color'))
+          .borderRadius(CommonConstants.RADIUS_NORMAL)
+          .enabled(!this.isSubmitting)
+          .stateEffect(true)
+          .onClick((): void => {
+            void this.saveTask();
+          })
         }
       }
       .width('100%')
@@ -1109,7 +1109,7 @@ export struct TaskEditPage {
       })
       .catch((err: Error) => {
         console.error(`显示删除对话框失败: ${err}`);
-      });
+    });
   }
 
   // 梦想选择按钮点击事件
