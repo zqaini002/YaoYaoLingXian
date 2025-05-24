@@ -1,104 +1,136 @@
-# 鸿蒙OS前端项目 (HarmonyOS/ArkTS)
-# IDE 和构建相关
+# =======================================
+# 全局规则 (适用于所有项目)
+# =======================================
+.DS_Store
+Thumbs.db
+*.log
+*.bak
+*.tmp
+*.temp
+.lock
+
+# IDE和编辑器通用
 .idea/
-.hvigor/
-**/build/
-.cxx/
-.clangd/
-.clang-format
-.clang-tidy
-.appanalyzer/
-.test/
+.vscode/
+*.sublime-*
+*.swp
+*.swo
+
+# =======================================
+# 前端项目 (YaoYaoLingXian - 鸿蒙OS/ArkTS)
+# =======================================
+# 构建和编译输出
+YaoYaoLingXian/**/build/
+YaoYaoLingXian/dist/
+YaoYaoLingXian/**/*.hap
+YaoYaoLingXian/**/*.app
+YaoYaoLingXian/**/*.rpk
+
+# 鸿蒙OS特有
+YaoYaoLingXian/.hvigor/
+YaoYaoLingXian/hvigor/
+YaoYaoLingXian/**/.preview/
+YaoYaoLingXian/.appanalyzer/
+YaoYaoLingXian/.test/
+YaoYaoLingXian/.cxx/
+YaoYaoLingXian/.clangd/
+YaoYaoLingXian/.clang-format
+YaoYaoLingXian/.clang-tidy
 
 # 依赖和模块
-node_modules/
-oh_modules/
+YaoYaoLingXian/node_modules/
+YaoYaoLingXian/oh_modules/
 
-# 本地配置文件
-local.properties
-**/Thumbs.db
-**/.DS_Store
-
-# 构建产物
-dist/
-build/
-*.hap
-*.app
-*.rpk
+# 本地配置
+YaoYaoLingXian/local.properties
+YaoYaoLingXian/**/*.local
 
 # 日志文件
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-*.log
+YaoYaoLingXian/npm-debug.log*
+YaoYaoLingXian/yarn-debug.log*
+YaoYaoLingXian/yarn-error.log*
 
-# Java后端项目
+# 缓存文件
+YaoYaoLingXian/**/.cache/
+YaoYaoLingXian/**/.hbuilderx/
+
+# =======================================
+# 后端项目 (Backend - Java/Spring Boot)
+# =======================================
 # 编译输出
-target/
-*.class
-*.jar
-*.war
-*.ear
-*.zip
-*.tar.gz
-*.rar
+Backend/target/
+Backend/**/*.class
+Backend/**/*.jar
+Backend/**/*.war
+Backend/**/*.ear
+Backend/**/*.zip
+Backend/**/*.tar.gz
+Backend/**/*.rar
 
-# Maven
-.mvn/
-mvnw
-mvnw.cmd
-!**/src/main/**/target/
-!**/src/test/**/target/
+# Maven特有
+Backend/.mvn/
+Backend/mvnw
+Backend/mvnw.cmd
+!Backend/**/src/main/**/target/
+!Backend/**/src/test/**/target/
 
-# Spring Boot
-application-dev.properties
-application-prod.properties
-application-test.properties
-!**/src/main/resources/application.yml
-!**/src/main/resources/application.properties
-!**/src/main/resources/bootstrap.yml
-!**/src/main/resources/bootstrap.properties
+# Spring Boot配置
+Backend/**/application-dev.properties
+Backend/**/application-prod.properties
+Backend/**/application-test.properties
+!Backend/**/src/main/resources/application.yml
+!Backend/**/src/main/resources/application.properties
+!Backend/**/src/main/resources/bootstrap.yml
+!Backend/**/src/main/resources/bootstrap.properties
 
 # 文件上传目录
-uploads/
+Backend/uploads/
 
-# 日志
-logs/
-*.log
+# 日志目录
+Backend/logs/
 
 # 测试报告
-/test-output/
-test-output-tests/
+Backend/test-output/
+Backend/test-output-tests/
 
-# IDE相关
-.settings/
-.project
-.classpath
-.factorypath
-.vscode/
-*.iws
-*.iml
-*.ipr
+# Eclipse/STS特有
+Backend/.settings/
+Backend/.project
+Backend/.classpath
+Backend/.factorypath
 
-# 运行时文件
-.lock
-.temp
-.tmp
+# IntelliJ IDEA特有
+Backend/**/*.iws
+Backend/**/*.iml
+Backend/**/*.ipr
 
 # 敏感信息配置
-**/resources/application-dev.yml
-**/resources/application-prod.yml
-**/resources/application-test.yml
-**/resources/secret.properties
-**/*-secret.properties
-**/*-credentials.properties
+Backend/**/resources/application-dev.yml
+Backend/**/resources/application-prod.yml
+Backend/**/resources/application-test.yml
+Backend/**/resources/secret.properties
+Backend/**/*-secret.properties
+Backend/**/*-credentials.properties
 
 # 安全敏感配置
-**/src/main/resources/keystore.jks
-**/src/main/resources/truststore.jks
-**/src/main/resources/ssl/
-**/src/main/resources/keys/
-**/*.pem
-**/*.key
-**/*.p12
+Backend/**/src/main/resources/keystore.jks
+Backend/**/src/main/resources/truststore.jks
+Backend/**/src/main/resources/ssl/
+Backend/**/src/main/resources/keys/
+Backend/**/*.pem
+Backend/**/*.key
+Backend/**/*.p12
+
+# 数据库临时文件
+Backend/**/*.db
+Backend/**/*.sqlite
+Backend/**/*.h2.db
+
+# =======================================
+# 项目特有目录和文件
+# =======================================
+# 文档和临时文件
+/doc/private/
+/tmp/
+/temp/
 
