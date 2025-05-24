@@ -21,6 +21,7 @@ com\dreamplanner\dto\TaskDTO$TaskDTOBuilder.class
 com\dreamplanner\entity\Comment.class
 com\dreamplanner\service\AuthService.class
 com\dreamplanner\exception\ResourceNotFoundException.class
+com\dreamplanner\vo\UserVO.class
 com\dreamplanner\dto\PostDTO.class
 com\dreamplanner\config\SecurityConfig$JwtAuthenticationFilter.class
 com\dreamplanner\entity\Follow$FollowBuilder.class

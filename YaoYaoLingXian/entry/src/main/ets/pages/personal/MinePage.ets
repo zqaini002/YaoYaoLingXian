@@ -1,4 +1,4 @@
-import { CommonConstants, User, DreamStats, ApiResponse } from '../../model/CommonTypes';
+import { CommonConstants, User, DreamStats, ApiResponse, UserInfo } from '../../model/CommonTypes';
 import { AppIcons } from '../../utils/IconUtils';
 import http from '@ohos.net.http';
 import * as ApiService from '../../services/ApiService';
@@ -6,17 +6,20 @@ import router from '@ohos.router';
 import promptAction from '@ohos.promptAction';
 import { UserSession } from '../../utils/auth/UserSession';
 
+// 定义路由参数接口
+interface RouteParams {
+  userId?: number;
+}
+
 @Component
 export struct MinePage {
-  @State userInfo: User = {
+  @State userInfo: UserInfo = {
     id: 0,
     username: '',
     nickname: '',
     avatar: '',
-    bio: '',
     followersCount: 0,
-    followingCount: 0,
-    createdAt: ''
+    followingCount: 0
   };
 
   @State dreamStats: DreamStats = {
@@ -38,7 +41,7 @@ export struct MinePage {
   private userSession: UserSession = UserSession.getInstance();
 
   aboutToAppear() {
-    // 获取当前用户ID (这里使用固定值，实际应从用户登录信息获取)
+    // 获取当前用户ID
     const userId = this.userSession.getUserId();
     this.fetchUserInfo(userId);
     this.fetchDreamStats(userId);
@@ -48,31 +51,17 @@ export struct MinePage {
   async fetchUserInfo(userId: number) {
     try {
       this.loading = true;
-
-      // 创建HTTP请求
-      const httpRequest = http.createHttp();
-      const url = `${ApiService.BASE_URL}/users/${userId}`;
+      console.info(`开始获取用户信息, userId: ${userId}`);
       
-      const response = await httpRequest.request(url, {
-        method: http.RequestMethod.GET,
-        readTimeout: ApiService.TIMEOUT,
-        connectTimeout: ApiService.TIMEOUT,
-        header: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-
-      // 处理响应
-      if (response.responseCode === 200) {
-        const result = JSON.parse(response.result as string) as ApiResponse<User>;
-        if (result.code === 200 && result.data) {
-          this.userInfo = result.data;
-        } else {
-          this.dataError = result.message || '获取用户信息失败';
-        }
+      // 使用ApiService获取用户信息
+      const userInfo = await ApiService.getUserById(userId);
+      
+      if (userInfo) {
+        this.userInfo = userInfo;
+        console.info(`成功获取用户信息: ${JSON.stringify(userInfo)}`);
       } else {
-        this.dataError = `请求失败，状态码: ${response.responseCode}`;
+        this.dataError = '获取用户信息失败: 返回数据为空';
+        console.error(this.dataError);
       }
     } catch (error) {
       this.dataError = `加载用户数据出错: ${(error as Error).message}`;
@@ -85,8 +74,17 @@ export struct MinePage {
   // 获取梦想统计数据
   async fetchDreamStats(userId: number) {
     try {
-      // 使用ApiService中的方法替代直接HTTP请求
-      this.dreamStats = await ApiService.getDreamStats(userId);
+      console.info(`开始获取梦想统计数据, userId: ${userId}`);
+      
+      // 使用ApiService中的方法获取梦想统计数据
+      const stats = await ApiService.getDreamStats(userId);
+      
+      if (stats) {
+        this.dreamStats = stats;
+        console.info(`成功获取梦想统计数据: ${JSON.stringify(stats)}`);
+      } else {
+        console.error('获取梦想统计数据失败: 返回数据为空');
+      }
     } catch (error) {
       console.error(`获取梦想统计数据错误: ${(error as Error).message}`);
       // 保持现有的默认值，不做修改
@@ -178,7 +176,7 @@ export struct MinePage {
           Column() {
             Row() {
               // 头像
-              Image(this.userInfo.avatar)
+              Image(this.userInfo.avatar || 'https://img.zcool.cn/community/01a1955d145660a8012051cdb52526.png')
                 .width(80)
                 .height(80)
                 .borderRadius(40)
@@ -188,12 +186,12 @@ export struct MinePage {
               
               // 用户名和签名
               Column() {
-                Text(this.userInfo.nickname || '')
+                Text(this.userInfo.nickname || '未设置昵称')
                   .fontSize(CommonConstants.FONT_SIZE_XLARGE)
                   .fontWeight(FontWeight.Bold)
                   .fontColor(Color.White)
                 
-                Text(this.userInfo.bio || '')
+                Text(this.userInfo.signature || '这个人很懒，什么也没有留下')
                   .fontSize(CommonConstants.FONT_SIZE_SMALL)
                   .fontColor(Color.White)
                   .opacity(0.9)
@@ -254,6 +252,14 @@ export struct MinePage {
               }
               .layoutWeight(1)
               .alignItems(HorizontalAlign.Center)
+              .onClick(() => {
+                router.pushUrl({
+                  url: 'pages/personal/FollowersPage',
+                  params: {
+                    userId: this.userInfo.id
+                  }
+                });
+              })
               
               Column() {
                 Text(this.userInfo?.followingCount?.toString() || '0')
@@ -267,6 +273,14 @@ export struct MinePage {
               }
               .layoutWeight(1)
               .alignItems(HorizontalAlign.Center)
+              .onClick(() => {
+                router.pushUrl({
+                  url: 'pages/personal/FollowingsPage',
+                  params: {
+                    userId: this.userInfo.id
+                  }
+                });
+              })
             }
             .width('100%')
             .margin({ top: CommonConstants.MARGIN_LARGE })

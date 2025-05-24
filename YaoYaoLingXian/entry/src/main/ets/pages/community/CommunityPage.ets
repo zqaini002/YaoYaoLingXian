@@ -5,6 +5,14 @@ import * as ApiService from '../../services/ApiService';
 import promptAction from '@ohos.promptAction';
 import refresh from '@ohos.app.ability.common';
 import router from '@ohos.router';
+// 鸿蒙API15中使用正确的导入路径
+import inputEvent from '@ohos.multimodalInput.inputEvent';
+import { UserSession } from '../../utils/auth/UserSession';
+
+// 空接口，不再定义不支持的方法
+interface ClickEvent {
+  // 在ArkTS API15中直接返回true来阻止事件冒泡
+}
 
 @Component
 export struct CommunityPage {
@@ -24,8 +32,17 @@ export struct CommunityPage {
   @State commentText: string = '';
   @State commentLoading: boolean = false;
   @State comments: Comment[] = [];
+  
+  // 当前登录用户ID
+  @State currentUserId: number = 0;
 
   aboutToAppear() {
+    // 获取当前用户ID
+    const userSession = UserSession.getInstance();
+    if (userSession.isLoggedIn()) {
+      this.currentUserId = userSession.getUserId();
+    }
+    
     this.fetchPosts();
   }
 
@@ -46,7 +63,8 @@ export struct CommunityPage {
       
       console.info(`开始获取社区帖子, 页码=${this.currentPage}, 分类=${this.tabs[this.selectedTab]}`);
 
-      const result: PageResponse<Post> = await ApiService.getPosts(this.currentPage, 10, this.selectedTab);
+      // 传递当前用户ID，用于获取关注状态
+      const result: PageResponse<Post> = await ApiService.getPosts(this.currentPage, 10, this.selectedTab, this.currentUserId);
       console.info(`获取到社区帖子数据: 总数=${result.content?.length || 0}, 总页数=${result.totalPages}`);
       
       if (refresh) {
@@ -117,9 +135,9 @@ export struct CommunityPage {
       this.commentLoading = true;
       this.comments = await ApiService.getPostComments(postId, 0, 20);
     } catch (error) {
-      console.error(`获取评论失败: ${(error as Error).message}`);
+      console.error(`获取评论失败: ${error instanceof Error ? error.message : String(error)}`);
       promptAction.showToast({
-        message: `获取评论失败: ${(error as Error).message}`,
+        message: `获取评论失败: ${error instanceof Error ? error.message : String(error)}`,
         duration: 2000
       });
     } finally {
@@ -200,6 +218,72 @@ export struct CommunityPage {
   loadMoreData() {
     if (!this.loading && this.hasMore) {
       this.fetchPosts(false);
+    }
+  }
+
+  // 处理关注用户
+  async handleFollow(authorId: number) {
+    console.info(`开始处理关注操作: authorId=${authorId}, currentUserId=${this.currentUserId}`);
+    
+    if (!this.currentUserId) {
+      promptAction.showToast({
+        message: '请先登录再进行操作',
+        duration: 2000
+      });
+      console.error('未登录，无法关注用户');
+      return;
+    }
+    
+    try {
+      // 找到所有包含该作者的帖子
+      const postsWithAuthor = this.posts.filter(post => post.author?.id === authorId);
+      if (postsWithAuthor.length === 0) {
+        console.error(`未找到该作者(${authorId})的帖子`);
+        return;
+      }
+      
+      // 获取当前关注状态
+      const isFollowed = postsWithAuthor[0].author?.isFollowed;
+      console.info(`当前关注状态: ${isFollowed ? '已关注' : '未关注'}`);
+      
+      if (isFollowed) {
+        // 如果已关注，则取消关注
+        console.info(`准备取消关注: ${this.currentUserId} -> ${authorId}`);
+        await ApiService.unfollowUser(this.currentUserId, authorId);
+        console.info('取消关注API调用成功');
+        promptAction.showToast({
+          message: '已取消关注',
+          duration: 2000
+        });
+      } else {
+        // 如果未关注，则关注
+        console.info(`准备关注用户: ${this.currentUserId} -> ${authorId}`);
+        await ApiService.followUser(this.currentUserId, authorId);
+        console.info('关注用户API调用成功');
+        promptAction.showToast({
+          message: '关注成功',
+          duration: 2000
+        });
+      }
+      
+      // 更新所有包含该作者的帖子的关注状态
+      this.posts.forEach(post => {
+        if (post.author?.id === authorId) {
+          if (post.author) {
+            post.author.isFollowed = !isFollowed;
+          }
+        }
+      });
+      console.info(`已更新UI关注状态为: ${!isFollowed ? '已关注' : '未关注'}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`关注操作失败: ${errorMessage}`);
+      
+      // 显示详细错误信息
+      promptAction.showToast({
+        message: `操作失败: ${errorMessage}`,
+        duration: 3000
+      });
     }
   }
 
@@ -400,9 +484,9 @@ export struct CommunityPage {
                 .layoutWeight(1)
                 
                 // 关注按钮
-                Text('关注')
+                Text(post.author?.isFollowed ? '已关注' : '关注')
                   .fontSize(CommonConstants.FONT_SIZE_SMALL)
-                  .fontColor($r('app.color.primary_color'))
+                  .fontColor(post.author?.isFollowed ? $r('app.color.text_tertiary') : $r('app.color.primary_color'))
                   .borderRadius(CommonConstants.RADIUS_SMALL)
                   .padding({
                     left: CommonConstants.MARGIN_LARGE,
@@ -412,10 +496,24 @@ export struct CommunityPage {
                   })
                   .border({
                     width: 1,
-                    color: $r('app.color.primary_color'),
+                    color: post.author?.isFollowed ? $r('app.color.text_tertiary') : $r('app.color.primary_color'),
                     style: BorderStyle.Solid,
                     radius: CommonConstants.RADIUS_SMALL
                   })
+                  .onClick((event?: ClickEvent) => {
+                    console.info('关注按钮被点击');
+                    // 处理作者ID
+                    if (post.author && post.author.id) {
+                      console.info(`处理关注用户: ${post.author.id}`);
+                      this.handleFollow(post.author.id);
+                    } else {
+                      console.error('作者ID不存在');
+                    }
+                    // 在ArkTS中通过单独的组件和返回true阻止事件冒泡
+                    return true;
+                  })
+                  // 增加一个额外的点击区域，使按钮更容易被点击
+                  .margin({ right: 10 })
               }
               .width('100%')
               .alignItems(VerticalAlign.Center)

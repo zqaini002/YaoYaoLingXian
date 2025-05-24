@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -49,14 +50,22 @@ public class HomeServiceImpl implements HomeService {
         String username = "用户" + userId;
         String nickname = "用户" + userId;
         String avatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde";
+        String signature = "每天进步一点点";
 
         // 获取用户信息 - 使用try-catch避免因表不存在导致的异常
         try {
-            User user = userRepository.getReferenceById(userId);
-            if (user != null) {
+            // 改用findById替代getReferenceById，确保实际查询数据库
+            Optional<User> userOpt = userRepository.findById(userId);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
                 username = user.getUsername();
                 nickname = user.getNickname() != null ? user.getNickname() : username;
                 avatar = user.getAvatar() != null ? user.getAvatar() : avatar;
+                signature = user.getSignature() != null ? user.getSignature() : signature;
+                
+                log.info("成功获取用户信息: username={}, nickname={}, signature={}", username, nickname, signature);
+            } else {
+                log.warn("用户不存在，使用默认值, userId: {}", userId);
             }
         } catch (Exception e) {
             log.warn("获取用户信息失败，使用默认值, userId: {}, error: {}", userId, e.getMessage());
@@ -143,6 +152,7 @@ public class HomeServiceImpl implements HomeService {
                 .username(username)
                 .nickname(nickname)
                 .avatar(avatar)
+                .signature(signature)  // 添加用户签名
                 .dreamStats(dreamStats)
                 .todayTasks(todayTasks)
                 .upcomingTasks(upcomingTasks)

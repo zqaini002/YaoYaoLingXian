@@ -90,7 +90,8 @@ public class PostController {
      * @param page     页码(从0开始)
      * @param pageSize 每页数量
      * @param category 类别（可选）
-     * @param userId   用户ID（可选，用于获取指定用户的帖子）
+     * @param authorId 用户ID（可选，用于获取指定用户的帖子）
+     * @param currentUserId 当前用户ID（可选，用于处理点赞和关注状态）
      * @return 帖子列表
      */
     @GetMapping
@@ -98,12 +99,14 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) Long userId) {
+            @RequestParam(required = false) Long authorId,
+            @RequestParam(required = false) Long currentUserId) {
 
         try {
-            log.info("获取帖子列表请求接收：page={}, pageSize={}, category={}, userId={}", page, pageSize, category, userId);
+            log.info("获取帖子列表请求接收：page={}, pageSize={}, category={}, authorId={}, currentUserId={}", 
+                    page, pageSize, category, authorId, currentUserId);
 
-            Map<String, Object> result = postService.getPosts(page, pageSize, category, userId);
+            Map<String, Object> result = postService.getPosts(page, pageSize, category, authorId, currentUserId);
             return ApiResponse.success(result);
         } catch (Exception e) {
             log.error("获取帖子列表失败", e);
@@ -165,14 +168,37 @@ public class PostController {
      * 点赞/取消点赞帖子
      *
      * @param postId 帖子ID
-     * @param userId 用户ID
+     * @param userId 用户ID（可选，如果未提供则从当前认证信息中获取）
      * @return 操作结果
      */
     @PostMapping("/{postId}/like")
-    public ApiResponse likePost(@PathVariable Long postId, @RequestParam Long userId) {
+    public ApiResponse likePost(@PathVariable Long postId, @RequestParam(required = false) Long userId) {
         try {
+            Long effectiveUserId = userId;
+            
+            // 如果未提供userId，则从当前认证信息中获取
+            if (effectiveUserId == null) {
+                org.springframework.security.core.Authentication authentication = 
+                    org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+                
+                if (authentication != null && authentication.isAuthenticated() && 
+                    !"anonymousUser".equals(authentication.getPrincipal())) {
+                    String username = authentication.getName();
+                    User authenticatedUser = userService.getUserByUsername(username).toUser();
+                    if (authenticatedUser != null) {
+                        effectiveUserId = authenticatedUser.getId();
+                        log.info("从认证信息中获取用户ID: {}", effectiveUserId);
+                    }
+                }
+            }
+            
+            // 确保有有效的用户ID
+            if (effectiveUserId == null) {
+                return ApiResponse.error("未提供用户ID且用户未登录");
+            }
+            
             // 验证用户和帖子是否存在
-            User user = userService.getUserById(userId).toUser();
+            User user = userService.getUserById(effectiveUserId).toUser();
             if (user == null) {
                 return ApiResponse.error("用户不存在");
             }
@@ -182,11 +208,11 @@ public class PostController {
                 return ApiResponse.error("帖子不存在");
             }
 
-            boolean isLiked = postService.toggleLike(postId, userId);
+            boolean isLiked = postService.toggleLike(postId, effectiveUserId);
             Map<String, Object> result = new HashMap<>();
             result.put("liked", isLiked);
 
-            log.info("用户{}{}帖子{}成功", userId, isLiked ? "点赞" : "取消点赞", postId);
+            log.info("用户{}{}帖子{}成功", effectiveUserId, isLiked ? "点赞" : "取消点赞", postId);
             return ApiResponse.success(result);
         } catch (Exception e) {
             log.error("点赞操作失败", e);
@@ -288,6 +314,63 @@ public class PostController {
         } catch (Exception e) {
             log.error("创建评论失败", e);
             return ApiResponse.error("创建评论失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 取消点赞帖子
+     *
+     * @param postId 帖子ID
+     * @param userId 用户ID（可选，如果未提供则从当前认证信息中获取）
+     * @return 操作结果
+     */
+    @DeleteMapping("/{postId}/like")
+    public ApiResponse unlikePost(@PathVariable Long postId, @RequestParam(required = false) Long userId) {
+        try {
+            Long effectiveUserId = userId;
+            
+            // 如果未提供userId，则从当前认证信息中获取
+            if (effectiveUserId == null) {
+                org.springframework.security.core.Authentication authentication = 
+                    org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+                
+                if (authentication != null && authentication.isAuthenticated() && 
+                    !"anonymousUser".equals(authentication.getPrincipal())) {
+                    String username = authentication.getName();
+                    User authenticatedUser = userService.getUserByUsername(username).toUser();
+                    if (authenticatedUser != null) {
+                        effectiveUserId = authenticatedUser.getId();
+                        log.info("从认证信息中获取用户ID: {}", effectiveUserId);
+                    }
+                }
+            }
+            
+            // 确保有有效的用户ID
+            if (effectiveUserId == null) {
+                return ApiResponse.error("未提供用户ID且用户未登录");
+            }
+            
+            // 验证用户和帖子是否存在
+            User user = userService.getUserById(effectiveUserId).toUser();
+            if (user == null) {
+                return ApiResponse.error("用户不存在");
+            }
+
+            PostVO existingPost = postService.getPostVOById(postId);
+            if (existingPost == null) {
+                return ApiResponse.error("帖子不存在");
+            }
+
+            // 直接调用toggleLike方法，它会检查是否已点赞并执行相应操作
+            boolean isLiked = postService.toggleLike(postId, effectiveUserId);
+            Map<String, Object> result = new HashMap<>();
+            result.put("liked", isLiked);
+
+            log.info("用户{}{}帖子{}成功", effectiveUserId, isLiked ? "点赞" : "取消点赞", postId);
+            return ApiResponse.success(result);
+        } catch (Exception e) {
+            log.error("取消点赞操作失败", e);
+            return ApiResponse.error("取消点赞操作失败：" + e.getMessage());
         }
     }
 } 

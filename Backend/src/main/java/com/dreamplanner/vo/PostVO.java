@@ -28,9 +28,19 @@ public class PostVO {
     private String username;
     
     /**
+     * 用户昵称
+     */
+    private String nickname;
+    
+    /**
      * 用户头像
      */
     private String userAvatar;
+    
+    /**
+     * 作者信息
+     */
+    private UserVO author;
     
     /**
      * 梦想ID
@@ -76,6 +86,11 @@ public class PostVO {
      * 当前查看用户是否已点赞
      */
     private Boolean isLiked;
+    
+    /**
+     * 当前查看用户是否已关注作者
+     */
+    private Boolean authorFollowed;
     
     /**
      * 创建时间
@@ -136,5 +151,14 @@ public class PostVO {
      */
     public void setLiked(boolean isLiked) {
         this.isLiked = isLiked;
+    }
+    
+    /**
+     * 设置是否已关注作者
+     * 
+     * @param authorFollowed 是否已关注作者
+     */
+    public void setAuthorFollowed(boolean authorFollowed) {
+        this.authorFollowed = authorFollowed;
     }
 } 

@@ -11,6 +11,8 @@ import { UserSession } from '../../utils/auth/UserSession';
 export struct HomePage {
   @State greeting: string = TimeUtils.getGreetingByTime();
   @State username: string = '梦想家';
+  @State nickname: string = '梦想家';
+  @State signature: string = '每天进步一点点，离梦想更近一点点。';
   
   // 统计数据
   @State totalDreams: number = 0;
@@ -68,7 +70,16 @@ export struct HomePage {
   initializeData() {
     // 从UserSession获取当前登录用户的ID
     this.userId = this.userSession.getUserId();
-    console.info(`初始化首页数据，获取到用户ID: ${this.userId}`);
+    console.info(`初始化首页数据，获取用户ID: ${this.userId}`);
+    
+    // 获取用户信息
+    const userInfo = this.userSession.getCurrentUser();
+    if (userInfo) {
+      this.username = userInfo.username;
+      this.nickname = userInfo.nickname || this.username;
+      this.signature = userInfo.signature || this.dailyQuote;
+      console.info(`已从会话获取用户信息: 昵称=${this.nickname}, 签名=${this.signature}`);
+    }
     
     // 随机选择一条每日励志语
     const randomQuoteIndex = Math.floor(Math.random() * this.dailyQuotes.length);
@@ -92,6 +103,18 @@ export struct HomePage {
       // 检查数据是否有效
       if (homeData) {
         console.info('成功获取首页数据，开始处理...');
+        
+        // 获取用户信息
+        if (homeData.username) {
+          this.username = homeData.username;
+        }
+        if (homeData.nickname) {
+          this.nickname = homeData.nickname;
+        }
+        if (homeData.signature) {
+          this.signature = homeData.signature;
+        }
+        console.info(`用户信息: 昵称=${this.nickname}, 签名=${this.signature}`);
         
         // 处理梦想统计
         if (homeData.dreamStats) {
@@ -339,44 +362,38 @@ export struct HomePage {
       // 内容区域
     Scroll() {
       Column() {
-          // 顶部渐变区域
+          // 顶部区域
           Stack({ alignContent: Alignment.Center }) {
-            // 渐变背景
-            Column()
+            // 背景图片
+            Image($r('app.media.home_background'))
               .width('100%')
               .height(180)
-              .linearGradient({
-                angle: 90,
-                colors: [
-                  [CommonConstants.COLOR_PRIMARY, 0.0],
-                  [CommonConstants.COLOR_PRIMARY_LIGHT, 1.0]
-                ]
-              })
+              .objectFit(ImageFit.Cover)
 
             // 标题区内容
             Column({ space: 8 }) {
               // 问候语
               Text(getTimeOfDay())
-                .fontSize(18)
-                .fontWeight(FontWeight.Medium)
-                .fontColor('#FFFFFF')
-                .opacity(0.9)
+                .fontSize(16)
+                .fontWeight(FontWeight.Regular)
+                .fontColor('#333333')
+                .opacity(0.85)
                 .padding({ top: 8 })
 
-              // 标题
-              Text($r('app.string.app_name'))
-                .fontSize(24)
+              // 问候用户昵称
+              Text(`${this.nickname || '梦想家'}`)
+                .fontSize(22)
                 .fontWeight(FontWeight.Bold)
-                .fontColor('#FFFFFF')
+                .fontColor('#333333')
               
-              // 每日励志名言
-              Text(this.dailyQuote)
+              // 用户个性签名或每日励志名言
+              Text(this.signature || this.dailyQuote)
                 .fontSize(14)
-                .fontColor('#FFFFFF')
-                .opacity(0.8)
-                .width('80%')
+                .fontColor('#333333')
+                .opacity(0.75)
+                .width('85%')
                 .textAlign(TextAlign.Center)
-                .padding({ top: 10, bottom: 10 })
+                .padding({ top: 6, bottom: 6 })
             }
             .width('100%')
             .padding({ top: 5 })

@@ -140,15 +140,16 @@ public interface PostService {
     PostVO getPostVOById(Long postId);
 
     /**
-     * 分页获取帖子列表
+     * 获取帖子列表（分页）
      *
-     * @param page     页码
-     * @param pageSize 每页数量
-     * @param category 分类（可选）
-     * @param userId   用户ID（可选）
-     * @return 包含帖子列表和分页信息的Map
+     * @param page 页码
+     * @param pageSize 每页大小
+     * @param category 类别
+     * @param authorId 作者ID（可选，获取指定用户的帖子）
+     * @param currentUserId 当前用户ID（用于判断点赞和关注状态）
+     * @return 帖子列表数据
      */
-    Map<String, Object> getPosts(int page, int pageSize, String category, Long userId);
+    Map<String, Object> getPosts(int page, int pageSize, String category, Long authorId, Long currentUserId);
 
     /**
      * 更新帖子

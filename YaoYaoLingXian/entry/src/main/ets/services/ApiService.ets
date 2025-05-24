@@ -6,6 +6,9 @@ import http from '@ohos.net.http';
 import { RequestMethod, ApiResponse, PageResponse, Dream, Task, DreamStats, QueryParams, HomePageData, RequestParams, Post, Comment, LoginParams, RegisterParams, AuthResponse, UserInfo } from '../model/CommonTypes';
 import { UserSession } from '../utils/auth/UserSession';
 
+// 导出需要的类型，解决模块导出问题
+export { UserInfo, PageResponse } from '../model/CommonTypes';
+
 /**
  * 帖子API数据结构
  */
@@ -169,6 +172,9 @@ export interface RequestData {
   nickname?: string;
   email?: string;
   phone?: string;
+  
+  // 新增参数
+  currentUserId?: number;
 }
 
 /**
@@ -662,11 +668,12 @@ export function getTasksByDreamId(dreamId: number): Promise<Task[]> {
  * @param page 页码
  * @param size 每页大小
  * @param type 动态类型: 0-推荐, 1-关注, 2-热门
+ * @param currentUserId 当前用户ID，用于获取关注状态
  * @returns 动态列表分页数据
  */
-export function getPosts(page: number, size: number, type: number): Promise<PageResponse<Post>> {
+export function getPosts(page: number, size: number, type: number, currentUserId?: number): Promise<PageResponse<Post>> {
   try {
-    console.info(`获取社区动态, page: ${page}, size: ${size}, type: ${type}`);
+    console.info(`获取社区动态, page: ${page}, size: ${size}, type: ${type}, currentUserId: ${currentUserId}`);
     
     // 根据type映射到category参数
     let category: string;
@@ -689,6 +696,11 @@ export function getPosts(page: number, size: number, type: number): Promise<Page
       pageSize: size, // 改用pageSize参数名
       category // 使用category参数替代type
     };
+    
+    // 如果有当前用户ID，将其作为参数传递用于判断点赞和关注状态，但使用不同的参数名称
+    if (currentUserId) {
+      params.currentUserId = currentUserId; // 使用不同的参数名称，避免后端将其用于过滤帖子
+    }
     
     return request<PostApiResponse>(RequestMethod.GET, '/posts', params as QueryParams)
       .then((apiResponse) => {
@@ -754,6 +766,15 @@ export function getPosts(page: number, size: number, type: number): Promise<Page
                 post.imageUrls = []; // 出错时确保imageUrls是空数组
               }
             }
+            
+            // 处理作者关注状态
+            if (post.author && post.author.id) {
+              // 如果后端已返回isFollowed状态，使用它
+              // 否则先默认为false，后续可能需要单独查询
+              if (post.author.isFollowed === undefined) {
+                post.author.isFollowed = false;
+              }
+            }
           });
         }
         
@@ -784,7 +805,28 @@ export function getPosts(page: number, size: number, type: number): Promise<Page
 export function likePost(id: number): Promise<void> {
   try {
     console.info(`点赞动态, id: ${id}`);
-    return request<void>(RequestMethod.POST, `/posts/${id}/like`);
+    
+    // 获取当前用户会话
+    const userSession = UserSession.getInstance();
+    
+    // 确保用户已登录
+    if (!userSession.isLoggedIn()) {
+      console.error('用户未登录，无法点赞');
+      return Promise.reject(new Error('用户未登录，请先登录'));
+    }
+    
+    // 获取用户ID
+    const userId = userSession.getUserId();
+    if (!userId) {
+      console.error('无法获取当前登录用户ID');
+      return Promise.reject(new Error('无法获取用户ID，请重新登录'));
+    }
+    
+    // 添加userId作为查询参数
+    const params = {} as QueryParams;
+    params.userId = userId;
+
+    return request<void>(RequestMethod.POST, `/posts/${id}/like`, params);
   } catch (error) {
     const errorMsg = `点赞动态失败: ${error instanceof Error ? error.message : String(error)}`;
     console.error(errorMsg);
@@ -800,7 +842,28 @@ export function likePost(id: number): Promise<void> {
 export function unlikePost(id: number): Promise<void> {
   try {
     console.info(`取消点赞动态, id: ${id}`);
-    return request<void>(RequestMethod.DELETE, `/posts/${id}/like`);
+    
+    // 获取当前用户会话
+    const userSession = UserSession.getInstance();
+    
+    // 确保用户已登录
+    if (!userSession.isLoggedIn()) {
+      console.error('用户未登录，无法取消点赞');
+      return Promise.reject(new Error('用户未登录，请先登录'));
+    }
+    
+    // 获取用户ID
+    const userId = userSession.getUserId();
+    if (!userId) {
+      console.error('无法获取当前登录用户ID');
+      return Promise.reject(new Error('无法获取用户ID，请重新登录'));
+    }
+    
+    // 添加userId作为查询参数
+    const params = {} as QueryParams;
+    params.userId = userId;
+
+    return request<void>(RequestMethod.DELETE, `/posts/${id}/like`, params);
   } catch (error) {
     const errorMsg = `取消点赞动态失败: ${error instanceof Error ? error.message : String(error)}`;
     console.error(errorMsg);
@@ -1127,5 +1190,212 @@ export async function logout(): Promise<ApiResponse<void>> {
       data: undefined
     };
     return mockResponse;
+  }
+}
+
+/**
+ * 关注用户
+ * 
+ * @param followerId 关注者ID（当前用户）
+ * @param followingId 被关注者ID
+ * @returns 操作结果
+ */
+export async function followUser(followerId: number, followingId: number): Promise<void> {
+  console.info(`API调用: 关注用户, followerId: ${followerId}, followingId: ${followingId}`);
+  
+  try {
+    // 检查参数
+    if (!followerId || !followingId) {
+      throw new Error('关注用户失败: 用户ID不能为空');
+    }
+    
+    // 构建URL和请求
+    const url = `${BASE_URL}/users/${followerId}/follow/${followingId}`;
+    console.info(`发送关注请求到: ${url}`);
+    
+    // 使用低级http请求以便查看更多详细信息
+    const httpRequest = http.createHttp();
+    const options: RequestOptions = {
+      method: http.RequestMethod.POST,
+      readTimeout: TIMEOUT,
+      connectTimeout: TIMEOUT,
+      header: {
+        'Content-Type': 'application/json'
+      }
+    };
+    
+    // 添加认证令牌
+    const userSession = UserSession.getInstance();
+    if (userSession && userSession.isLoggedIn()) {
+      const token = userSession.getToken();
+      if (token) {
+        options.header['Authorization'] = `Bearer ${token}`;
+      }
+    }
+    
+    const response = await httpRequest.request(url, options);
+    console.info(`关注用户响应: ${response.responseCode}, ${JSON.stringify(response.result)}`);
+    
+    if (response.responseCode >= 200 && response.responseCode < 300) {
+      console.info('关注用户成功');
+      return;
+    } else {
+      throw new Error(`关注用户失败: HTTP ${response.responseCode} - ${JSON.stringify(response.result)}`);
+    }
+  } catch (error) {
+    console.error(`关注用户API异常: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`关注用户失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 取消关注用户
+ * 
+ * @param followerId 关注者ID（当前用户）
+ * @param followingId 被关注者ID
+ * @returns 操作结果
+ */
+export async function unfollowUser(followerId: number, followingId: number): Promise<void> {
+  console.info(`API调用: 取消关注用户, followerId: ${followerId}, followingId: ${followingId}`);
+  
+  try {
+    // 检查参数
+    if (!followerId || !followingId) {
+      throw new Error('取消关注用户失败: 用户ID不能为空');
+    }
+    
+    // 构建URL和请求
+    const url = `${BASE_URL}/users/${followerId}/unfollow/${followingId}`;
+    console.info(`发送取消关注请求到: ${url}`);
+    
+    // 使用低级http请求以便查看更多详细信息
+    const httpRequest = http.createHttp();
+    const options: RequestOptions = {
+      method: http.RequestMethod.DELETE,
+      readTimeout: TIMEOUT,
+      connectTimeout: TIMEOUT,
+      header: {
+        'Content-Type': 'application/json'
+      }
+    };
+    
+    // 添加认证令牌
+    const userSession = UserSession.getInstance();
+    if (userSession && userSession.isLoggedIn()) {
+      const token = userSession.getToken();
+      if (token) {
+        options.header['Authorization'] = `Bearer ${token}`;
+      }
+    }
+    
+    const response = await httpRequest.request(url, options);
+    console.info(`取消关注用户响应: ${response.responseCode}, ${JSON.stringify(response.result)}`);
+    
+    if (response.responseCode >= 200 && response.responseCode < 300) {
+      console.info('取消关注用户成功');
+      return;
+    } else {
+      throw new Error(`取消关注用户失败: HTTP ${response.responseCode} - ${JSON.stringify(response.result)}`);
+    }
+  } catch (error) {
+    console.error(`取消关注用户API异常: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`取消关注用户失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 检查是否已关注用户
+ * 
+ * @param followerId 关注者ID（当前用户）
+ * @param followingId 被关注者ID
+ * @returns 是否已关注
+ */
+export function isFollowingUser(followerId: number, followingId: number): Promise<boolean> {
+  try {
+    console.info(`检查是否已关注用户, followerId: ${followerId}, followingId: ${followingId}`);
+    return request<boolean>(RequestMethod.GET, `/users/${followerId}/is-following/${followingId}`);
+  } catch (error) {
+    console.error(`检查关注状态失败: ${error instanceof Error ? error.message : String(error)}`);
+    return Promise.resolve(false); // 出错时默认返回未关注
+  }
+}
+
+/**
+ * 获取用户关注列表
+ * 
+ * @param userId 用户ID
+ * @param page 页码
+ * @param size 每页大小
+ * @returns 关注列表
+ */
+export function getUserFollowings(userId: number, page: number = 0, size: number = 20): Promise<PageResponse<UserInfo>> {
+  try {
+    console.info(`获取用户关注列表, userId: ${userId}, page: ${page}, size: ${size}`);
+    const params = {} as QueryParams;
+    params.page = page;
+    params.size = size;
+    
+    return request<PageResponse<UserInfo>>(RequestMethod.GET, `/users/${userId}/followings`, params);
+  } catch (error) {
+    console.error(`获取用户关注列表失败: ${error instanceof Error ? error.message : String(error)}`);
+    // 返回空数据结构
+    const emptyResponse: PageResponse<UserInfo> = {
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      size: size,
+      number: page,
+      first: true,
+      last: true
+    };
+    return Promise.resolve(emptyResponse);
+  }
+}
+
+/**
+ * 获取用户粉丝列表
+ * 
+ * @param userId 用户ID
+ * @param page 页码
+ * @param size 每页大小
+ * @returns 粉丝列表
+ */
+export function getUserFollowers(userId: number, page: number = 0, size: number = 20): Promise<PageResponse<UserInfo>> {
+  try {
+    console.info(`获取用户粉丝列表, userId: ${userId}, page: ${page}, size: ${size}`);
+    const params = {} as QueryParams;
+    params.page = page;
+    params.size = size;
+    
+    return request<PageResponse<UserInfo>>(RequestMethod.GET, `/users/${userId}/followers`, params);
+  } catch (error) {
+    console.error(`获取用户粉丝列表失败: ${error instanceof Error ? error.message : String(error)}`);
+    // 返回空数据结构
+    const emptyResponse: PageResponse<UserInfo> = {
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      size: size,
+      number: page,
+      first: true,
+      last: true
+    };
+    return Promise.resolve(emptyResponse);
+  }
+}
+
+/**
+ * 根据ID获取用户信息
+ * 
+ * @param userId 用户ID
+ * @returns 用户信息
+ */
+export function getUserById(userId: number): Promise<UserInfo> {
+  try {
+    console.info(`获取用户信息, userId: ${userId}`);
+    return request<UserInfo>(RequestMethod.GET, `/users/${userId}`);
+  } catch (error) {
+    console.error(`获取用户信息失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`获取用户信息失败: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

@@ -66,6 +66,7 @@ public class JwtUtil {
     private Claims getAllClaimsFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
+                .setAllowedClockSkewSeconds(300) // 允许5分钟的时钟偏差
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -126,7 +127,7 @@ public class JwtUtil {
         final String tokenUsername = getUsernameFromToken(token);
         return (tokenUsername.equals(username) && !isTokenExpired(token));
     }
-    
+
     /**
      * 获取签名密钥
      *
@@ -135,12 +136,12 @@ public class JwtUtil {
     private Key getSigningKey() {
         // 先尝试使用配置中的secret
         byte[] keyBytes = secret.getBytes();
-        
+
         // 确保密钥足够长，如果不够，使用HS256算法自动生成
         if (keyBytes.length * 8 < 256) { // HS256需要至少256位
             return Keys.secretKeyFor(SignatureAlgorithm.HS256);
         }
-        
+
         return Keys.hmacShaKeyFor(keyBytes);
     }
 } 

@@ -32,6 +32,7 @@ E:\hongm\Backend\src\main\java\com\dreamplanner\controller\DreamController.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\entity\DreamTag.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\config\WebConfig.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\repository\FollowRepository.java
+E:\hongm\Backend\src\main\java\com\dreamplanner\vo\UserVO.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\entity\Follow.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\repository\UserRepository.java
 E:\hongm\Backend\src\main\java\com\dreamplanner\config\CorsConfig.java

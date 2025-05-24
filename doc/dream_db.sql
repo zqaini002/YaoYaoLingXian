@@ -11,7 +11,7 @@
  Target Server Version : 80042 (8.0.42)
  File Encoding         : 65001
 
- Date: 22/05/2025 21:49:57
+ Date: 25/05/2025 02:41:28
 */
 
 SET NAMES utf8mb4;
@@ -35,7 +35,7 @@ CREATE TABLE `comment`  (
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_parent_id`(`parent_id` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '评论表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '评论表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of comment
@@ -56,6 +56,7 @@ INSERT INTO `comment` VALUES (13, 4, 5, '摄影需要不断实践，期待看到
 INSERT INTO `comment` VALUES (14, 4, 2, '请问你用的是什么相机？', NULL, 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
 INSERT INTO `comment` VALUES (15, 5, 2, '刀工确实是烹饪的基础，掌握好会事半功倍。', NULL, 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
 INSERT INTO `comment` VALUES (16, 5, 4, '学习烹饪太棒了，期待看到你的成果！', NULL, 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
+INSERT INTO `comment` VALUES (17, 1, 1, '天天', 0, 1, '2025-05-24 01:56:40', '2025-05-24 01:56:40');
 
 -- ----------------------------
 -- Table structure for dream
@@ -86,12 +87,12 @@ CREATE TABLE `dream`  (
 -- Records of dream
 -- ----------------------------
 INSERT INTO `dream` VALUES (1, 2, '学习英语', '提高英语口语能力，能够流利地进行日常交流和商务沟通', '学习', 1, 1, 35.00, '2024-12-31', 365, 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-20 13:54:35');
-INSERT INTO `dream` VALUES (2, 2, '完成马拉松', '参加一次全程马拉松比赛并完赛', '健康', 2, 1, 29.00, '2024-06-30', 180, 'http://swcp3k13z.hd-bkt.clouddn.com/OIP.jpg', 1, '2025-05-16 15:42:50', '2025-05-21 16:59:28');
-INSERT INTO `dream` VALUES (3, 3, '学习编程', '掌握Python编程语言，能够独立开发小型应用', '学习', 1, 1, 50.00, '2024-08-31', 240, 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `dream` VALUES (4, 3, '环游欧洲', '游览欧洲五个国家的主要城市和景点', '旅行', 3, 1, 0.00, '2025-12-31', 30, 'https://images.unsplash.com/photo-1503917988258-f87a78e3c995', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `dream` VALUES (5, 4, '写一本小说', '完成一部8万字以上的科幻小说创作', '创作', 2, 1, 15.00, '2024-12-31', 300, 'https://images.unsplash.com/photo-1455390582262-044cdead277a', 0, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `dream` VALUES (6, 4, '学习摄影', '系统学习摄影技巧，能够拍摄专业级风景和人像作品', '艺术', 2, 1, 40.00, '2024-10-31', 240, 'https://images.unsplash.com/photo-1607462109225-6b64ae2dd3cb', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `dream` VALUES (7, 5, '创业开公司', '创办一家专注于健康饮食的初创公司', '职业', 1, 1, 10.00, '2025-06-30', 730, 'https://images.unsplash.com/photo-1664575599736-c5197c684128', 0, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
+INSERT INTO `dream` VALUES (2, 2, '完成马拉松', '参加一次全程马拉松比赛并完赛', '健康', 2, 1, 29.00, '2024-06-30', 180, 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:57:07');
+INSERT INTO `dream` VALUES (3, 3, '学习编程', '掌握Python编程语言，能够独立开发小型应用', '学习', 1, 1, 50.00, '2024-08-31', 240, 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:57:07');
+INSERT INTO `dream` VALUES (4, 3, '环游欧洲', '游览欧洲五个国家的主要城市和景点', '旅行', 3, 1, 0.00, '2025-12-31', 30, 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:57:08');
+INSERT INTO `dream` VALUES (5, 4, '写一本小说', '完成一部8万字以上的科幻小说创作', '创作', 2, 1, 15.00, '2024-12-31', 300, 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 0, '2025-05-16 15:42:50', '2025-05-25 01:57:08');
+INSERT INTO `dream` VALUES (6, 4, '学习摄影', '系统学习摄影技巧，能够拍摄专业级风景和人像作品', '艺术', 2, 1, 40.00, '2024-10-31', 240, 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:57:09');
+INSERT INTO `dream` VALUES (7, 5, '创业开公司', '创办一家专注于健康饮食的初创公司', '职业', 1, 1, 10.00, '2025-06-30', 730, 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 0, '2025-05-16 15:42:50', '2025-05-25 01:57:09');
 INSERT INTO `dream` VALUES (8, 5, '学习烹饪', '学习中餐、西餐和日料的基本烹饪技巧', '生活技能', 3, 1, 30.00, '2024-05-31', 180, 'https://images.unsplash.com/photo-1556910103-1c02745aae4d', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
 
 -- ----------------------------
@@ -195,7 +196,7 @@ CREATE TABLE `follow`  (
   UNIQUE INDEX `idx_follower_following`(`follower_id` ASC, `following_id` ASC) USING BTREE,
   INDEX `idx_follower_id`(`follower_id` ASC) USING BTREE,
   INDEX `idx_following_id`(`following_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '关注表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '关注表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of follow
@@ -212,6 +213,8 @@ INSERT INTO `follow` VALUES (9, 4, 5, '2025-05-16 15:42:50');
 INSERT INTO `follow` VALUES (10, 5, 2, '2025-05-16 15:42:50');
 INSERT INTO `follow` VALUES (11, 5, 3, '2025-05-16 15:42:50');
 INSERT INTO `follow` VALUES (12, 5, 4, '2025-05-16 15:42:50');
+INSERT INTO `follow` VALUES (13, 1, 4, '2025-05-25 02:36:17');
+INSERT INTO `follow` VALUES (14, 1, 2, '2025-05-25 02:40:52');
 
 -- ----------------------------
 -- Table structure for like
@@ -226,7 +229,7 @@ CREATE TABLE `like`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `idx_post_user`(`post_id` ASC, `user_id` ASC) USING BTREE,
   UNIQUE INDEX `idx_comment_user`(`comment_id` ASC, `user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 27 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '点赞表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 31 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '点赞表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of like
@@ -237,7 +240,6 @@ INSERT INTO `like` VALUES (3, 1, NULL, 5, '2025-05-16 15:42:50');
 INSERT INTO `like` VALUES (4, NULL, 1, 2, '2025-05-16 15:42:50');
 INSERT INTO `like` VALUES (5, NULL, 2, 2, '2025-05-16 15:42:50');
 INSERT INTO `like` VALUES (6, NULL, 3, 2, '2025-05-16 15:42:50');
-INSERT INTO `like` VALUES (7, 2, NULL, 3, '2025-05-16 15:42:50');
 INSERT INTO `like` VALUES (8, 2, NULL, 5, '2025-05-16 15:42:50');
 INSERT INTO `like` VALUES (9, NULL, 4, 2, '2025-05-16 15:42:50');
 INSERT INTO `like` VALUES (10, NULL, 5, 2, '2025-05-16 15:42:50');
@@ -257,6 +259,7 @@ INSERT INTO `like` VALUES (23, 5, NULL, 2, '2025-05-16 15:42:50');
 INSERT INTO `like` VALUES (24, 5, NULL, 4, '2025-05-16 15:42:50');
 INSERT INTO `like` VALUES (25, NULL, 15, 5, '2025-05-16 15:42:50');
 INSERT INTO `like` VALUES (26, NULL, 16, 5, '2025-05-16 15:42:50');
+INSERT INTO `like` VALUES (30, 1, NULL, 1, '2025-05-24 23:14:47');
 
 -- ----------------------------
 -- Table structure for post
@@ -284,11 +287,11 @@ CREATE TABLE `post`  (
 -- ----------------------------
 -- Records of post
 -- ----------------------------
-INSERT INTO `post` VALUES (1, 2, 1, '开始我的英语学习之旅', '今天正式开始我的英语学习计划，希望一年后能够流利地用英语交流。我制定了详细的学习计划，包括单词背诵、听力训练和口语练习。加油！', 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d', 1, 68, 15, 3, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `post` VALUES (2, 2, 2, '马拉松训练第一周', '这周开始了马拉松训练，虽然只是每次跑5公里，但已经让我感到有些吃力。不过，坚持就是胜利，我相信通过系统训练，一定能在明年完成全程马拉松！', 'https://images.unsplash.com/photo-1530137234839-95979146bdd2,https://images.unsplash.com/photo-1486218119243-13883505764c', 1, 42, 10, 2, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `post` VALUES (3, 3, 3, 'Python学习笔记分享', '学习Python已经两个月了，今天分享一些我的学习笔记和心得。编程真的很有趣，解决问题的过程让人很有成就感。附上我写的一些代码示例，希望对同样学习Python的朋友有帮助。', 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935', 1, 86, 20, 5, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `post` VALUES (4, 4, 6, '我的摄影进阶之路', '开始系统学习摄影一个月了，从最基础的相机参数到构图技巧，每天都有新收获。分享几张我最近拍摄的作品，虽然还很业余，但已经能看到一些进步。期待未来能拍出更好的作品！', 'https://images.unsplash.com/photo-1607462109225-6b64ae2dd3cb,https://images.unsplash.com/photo-1500531279542-fc8490c8ea4d,https://images.unsplash.com/photo-1493246507139-91e8fad9978e', 1, 55, 13, 4, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `post` VALUES (5, 5, 8, '烹饪学习第一课：基础刀工', '今天上了烹饪课的第一堂课，学习了基础刀工。才知道原来切菜也是一门学问！分享一些学到的技巧：1. 握刀姿势要正确；2. 切菜要保持稳定的节奏；3. 不同食材需要不同的切法。明天将学习简单的炒菜技巧，很期待！', 'https://images.unsplash.com/photo-1556910103-1c02745aae4d', 1, 37, 8, 2, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
+INSERT INTO `post` VALUES (1, 2, 1, '开始我的英语学习之旅', '今天正式开始我的英语学习计划，希望一年后能够流利地用英语交流。我制定了详细的学习计划，包括单词背诵、听力训练和口语练习。加油！', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, 76, 16, 4, '2025-05-16 15:42:50', '2025-05-25 02:02:08');
+INSERT INTO `post` VALUES (2, 2, 2, '马拉松训练第一周', '这周开始了马拉松训练，虽然只是每次跑5公里，但已经让我感到有些吃力。不过，坚持就是胜利，我相信通过系统训练，一定能在明年完成全程马拉松！', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, 43, 9, 2, '2025-05-16 15:42:50', '2025-05-25 02:02:09');
+INSERT INTO `post` VALUES (3, 3, 3, 'Python学习笔记分享', '学习Python已经两个月了，今天分享一些我的学习笔记和心得。编程真的很有趣，解决问题的过程让人很有成就感。附上我写的一些代码示例，希望对同样学习Python的朋友有帮助。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, 86, 20, 5, '2025-05-16 15:42:50', '2025-05-25 02:02:10');
+INSERT INTO `post` VALUES (4, 4, 6, '我的摄影进阶之路', '开始系统学习摄影一个月了，从最基础的相机参数到构图技巧，每天都有新收获。分享几张我最近拍摄的作品，虽然还很业余，但已经能看到一些进步。期待未来能拍出更好的作品！', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, 55, 13, 4, '2025-05-16 15:42:50', '2025-05-25 02:02:10');
+INSERT INTO `post` VALUES (5, 5, 8, '烹饪学习第一课：基础刀工', '今天上了烹饪课的第一堂课，学习了基础刀工。才知道原来切菜也是一门学问！分享一些学到的技巧：1. 握刀姿势要正确；2. 切菜要保持稳定的节奏；3. 不同食材需要不同的切法。明天将学习简单的炒菜技巧，很期待！', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, 37, 8, 2, '2025-05-16 15:42:50', '2025-05-25 02:02:11');
 
 -- ----------------------------
 -- Table structure for progress
@@ -311,25 +314,25 @@ CREATE TABLE `progress`  (
 -- ----------------------------
 -- Records of progress
 -- ----------------------------
-INSERT INTO `progress` VALUES (1, 1, 1, 2, '完成了英语学习计划的制定，确定了每天学习2小时，重点提高听力和口语能力。', NULL, '2025-05-16 15:42:50');
-INSERT INTO `progress` VALUES (2, 1, 2, 2, '今天背诵了20个新单词，并复习了昨天的单词，记忆效果不错。', NULL, '2025-05-16 15:42:50');
-INSERT INTO `progress` VALUES (3, 1, 3, 2, '观看了《老友记》第一季第一集，大约能听懂60%的对话，需要继续努力。', NULL, '2025-05-16 15:42:50');
-INSERT INTO `progress` VALUES (4, 1, 5, 2, '报名了线下英语培训班，每周六上课，为期3个月。', NULL, '2025-05-16 15:42:50');
-INSERT INTO `progress` VALUES (5, 2, 6, 2, '制定了详细的马拉松训练计划，前期以提高基础耐力为主。', NULL, '2025-05-16 15:42:50');
-INSERT INTO `progress` VALUES (6, 2, 7, 2, '今天完成了5公里的慢跑，用时35分钟，感觉还不错。', 'https://images.unsplash.com/photo-1486218119243-13883505764c', '2025-05-16 15:42:50');
-INSERT INTO `progress` VALUES (7, 2, 10, 2, '购买了专业跑鞋和运动服装，为长期训练做准备。', 'https://images.unsplash.com/photo-1552346154-21d32810aba3', '2025-05-16 15:42:50');
-INSERT INTO `progress` VALUES (8, 3, 11, 3, '完成了Python基础语法的学习，能够理解和使用基本的数据类型、控制流和函数。', NULL, '2025-05-16 15:42:50');
-INSERT INTO `progress` VALUES (9, 3, 12, 3, '完成了30个基础编程练习，对字符串、列表和字典的操作更加熟练。', NULL, '2025-05-16 15:42:50');
-INSERT INTO `progress` VALUES (10, 3, 13, 3, '开始学习数据结构，理解了栈和队列的概念和实现方法。', NULL, '2025-05-16 15:42:50');
-INSERT INTO `progress` VALUES (11, 5, 21, 4, '完成了小说的主题构思，确定为科幻题材，探讨人工智能与人类关系。', NULL, '2025-05-16 15:42:50');
-INSERT INTO `progress` VALUES (12, 5, 22, 4, '创建了三个主要角色的详细设定，包括背景故事、性格特点和动机。', NULL, '2025-05-16 15:42:50');
-INSERT INTO `progress` VALUES (13, 6, NULL, 4, '参加了摄影基础课程，学习了相机参数的基本设置和应用。', 'https://images.unsplash.com/photo-1607462109225-6b64ae2dd3cb', '2025-05-16 15:42:50');
-INSERT INTO `progress` VALUES (14, 6, NULL, 4, '尝试了不同光线条件下的拍摄，理解了光线对摄影的重要性。', 'https://images.unsplash.com/photo-1500531279542-fc8490c8ea4d', '2025-05-16 15:42:50');
-INSERT INTO `progress` VALUES (15, 8, NULL, 5, '学习了基本的食材处理和刀工技巧，为烹饪打下基础。', 'https://images.unsplash.com/photo-1556910103-1c02745aae4d', '2025-05-16 15:42:50');
-INSERT INTO `progress` VALUES (16, 1, 1, 2, 'xixi', NULL, '2025-05-18 02:26:47');
-INSERT INTO `progress` VALUES (17, 1, 1, 2, 'wanc', NULL, '2025-05-18 02:27:20');
-INSERT INTO `progress` VALUES (18, 1, 2, 2, 'xixi', NULL, '2025-05-18 02:31:12');
-INSERT INTO `progress` VALUES (19, 1, 2, 2, 'haha', NULL, '2025-05-18 02:34:05');
+INSERT INTO `progress` VALUES (1, 1, 1, 2, '完成了英语学习计划的制定，确定了每天学习2小时，重点提高听力和口语能力。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (2, 1, 2, 2, '今天背诵了20个新单词，并复习了昨天的单词，记忆效果不错。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (3, 1, 3, 2, '观看了《老友记》第一季第一集，大约能听懂60%的对话，需要继续努力。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (4, 1, 5, 2, '报名了线下英语培训班，每周六上课，为期3个月。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (5, 2, 6, 2, '制定了详细的马拉松训练计划，前期以提高基础耐力为主。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (6, 2, 7, 2, '今天完成了5公里的慢跑，用时35分钟，感觉还不错。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (7, 2, 10, 2, '购买了专业跑鞋和运动服装，为长期训练做准备。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (8, 3, 11, 3, '完成了Python基础语法的学习，能够理解和使用基本的数据类型、控制流和函数。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (9, 3, 12, 3, '完成了30个基础编程练习，对字符串、列表和字典的操作更加熟练。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (10, 3, 13, 3, '开始学习数据结构，理解了栈和队列的概念和实现方法。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (11, 5, 21, 4, '完成了小说的主题构思，确定为科幻题材，探讨人工智能与人类关系。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (12, 5, 22, 4, '创建了三个主要角色的详细设定，包括背景故事、性格特点和动机。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (13, 6, NULL, 4, '参加了摄影基础课程，学习了相机参数的基本设置和应用。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (14, 6, NULL, 4, '尝试了不同光线条件下的拍摄，理解了光线对摄影的重要性。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (15, 8, NULL, 5, '学习了基本的食材处理和刀工技巧，为烹饪打下基础。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-16 15:42:50');
+INSERT INTO `progress` VALUES (16, 1, 1, 2, 'xixi', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-18 02:26:47');
+INSERT INTO `progress` VALUES (17, 1, 1, 2, 'wanc', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-18 02:27:20');
+INSERT INTO `progress` VALUES (18, 1, 2, 2, 'xixi', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-18 02:31:12');
+INSERT INTO `progress` VALUES (19, 1, 2, 2, 'haha', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', '2025-05-18 02:34:05');
 
 -- ----------------------------
 -- Table structure for resource
@@ -355,21 +358,21 @@ CREATE TABLE `resource`  (
 -- ----------------------------
 -- Records of resource
 -- ----------------------------
-INSERT INTO `resource` VALUES (1, '英语流利说', '通过AI技术提高英语口语能力的App', '应用', '语言学习', 'https://www.liulishuo.com/', 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `resource` VALUES (2, '可可英语', '提供英语听力、口语、阅读等全方位训练', '网站', '语言学习', 'https://www.kekenet.com/', 'https://images.unsplash.com/photo-1604882767135-b44e033f5a1b', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `resource` VALUES (3, '跑步圣经', '马拉松训练指南，从零基础到完赛', '书籍', '运动健康', 'https://book.example.com/running-bible', 'https://images.unsplash.com/photo-1530137234839-95979146bdd2', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `resource` VALUES (4, '初级马拉松训练计划', '16周马拉松训练计划，适合初次参赛者', '课程', '运动健康', 'https://course.example.com/marathon-beginner', 'https://images.unsplash.com/photo-1486218119243-13883505764c', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `resource` VALUES (5, 'Python零基础入门课程', '从零开始学习Python编程语言', '课程', '编程学习', 'https://course.example.com/python-beginner', 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `resource` VALUES (6, 'Python实战项目教程', '通过项目实践提高Python编程能力', '视频', '编程学习', 'https://video.example.com/python-projects', 'https://images.unsplash.com/photo-1517180102446-f3ece451e9d8', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `resource` VALUES (7, '欧洲自助游攻略', '详细介绍欧洲各国旅游信息和经验', '电子书', '旅行', 'https://book.example.com/europe-travel', 'https://images.unsplash.com/photo-1503917988258-f87a78e3c995', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `resource` VALUES (8, '欧洲文化艺术之旅', '探索欧洲各国的艺术、历史和文化', '视频', '旅行', 'https://video.example.com/europe-culture', 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `resource` VALUES (9, '小说创作指南', '从构思到成稿的小说写作全过程', '书籍', '写作', 'https://book.example.com/novel-writing', 'https://images.unsplash.com/photo-1455390582262-044cdead277a', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `resource` VALUES (10, '角色塑造技巧', '如何创造生动、立体的小说角色', '课程', '写作', 'https://course.example.com/character-creation', 'https://images.unsplash.com/photo-1506784365847-bbad939e9335', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `resource` VALUES (11, '摄影基础教程', '从入门到精通的摄影技巧指南', '课程', '摄影', 'https://course.example.com/photography-basics', 'https://images.unsplash.com/photo-1607462109225-6b64ae2dd3cb', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `resource` VALUES (12, '风景摄影技巧', '如何拍摄出震撼人心的风景照片', '视频', '摄影', 'https://video.example.com/landscape-photography', 'https://images.unsplash.com/photo-1500531279542-fc8490c8ea4d', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `resource` VALUES (13, '创业指南', '从0到1的创业全过程指导', '书籍', '创业', 'https://book.example.com/startup-guide', 'https://images.unsplash.com/photo-1664575599736-c5197c684128', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `resource` VALUES (14, '商业计划书编写', '如何撰写有说服力的商业计划书', '课程', '创业', 'https://course.example.com/business-plan', 'https://images.unsplash.com/photo-1542744173-8659143b5456', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
-INSERT INTO `resource` VALUES (15, '中式烹饪入门', '中国传统菜系的基本烹饪技巧', '视频', '烹饪', 'https://video.example.com/chinese-cooking', 'https://images.unsplash.com/photo-1556910103-1c02745aae4d', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
+INSERT INTO `resource` VALUES (1, '英语流利说', '通过AI技术提高英语口语能力的App', '应用', '语言学习', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:03');
+INSERT INTO `resource` VALUES (2, '可可英语', '提供英语听力、口语、阅读等全方位训练', '网站', '语言学习', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:05');
+INSERT INTO `resource` VALUES (3, '跑步圣经', '马拉松训练指南，从零基础到完赛', '书籍', '运动健康', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:05');
+INSERT INTO `resource` VALUES (4, '初级马拉松训练计划', '16周马拉松训练计划，适合初次参赛者', '课程', '运动健康', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:06');
+INSERT INTO `resource` VALUES (5, 'Python零基础入门课程', '从零开始学习Python编程语言', '课程', '编程学习', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:06');
+INSERT INTO `resource` VALUES (6, 'Python实战项目教程', '通过项目实践提高Python编程能力', '视频', '编程学习', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:07');
+INSERT INTO `resource` VALUES (7, '欧洲自助游攻略', '详细介绍欧洲各国旅游信息和经验', '电子书', '旅行', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:08');
+INSERT INTO `resource` VALUES (8, '欧洲文化艺术之旅', '探索欧洲各国的艺术、历史和文化', '视频', '旅行', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:08');
+INSERT INTO `resource` VALUES (9, '小说创作指南', '从构思到成稿的小说写作全过程', '书籍', '写作', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:09');
+INSERT INTO `resource` VALUES (10, '角色塑造技巧', '如何创造生动、立体的小说角色', '课程', '写作', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:10');
+INSERT INTO `resource` VALUES (11, '摄影基础教程', '从入门到精通的摄影技巧指南', '课程', '摄影', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:10');
+INSERT INTO `resource` VALUES (12, '风景摄影技巧', '如何拍摄出震撼人心的风景照片', '视频', '摄影', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:11');
+INSERT INTO `resource` VALUES (13, '创业指南', '从0到1的创业全过程指导', '书籍', '创业', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:11');
+INSERT INTO `resource` VALUES (14, '商业计划书编写', '如何撰写有说服力的商业计划书', '课程', '创业', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:12');
+INSERT INTO `resource` VALUES (15, '中式烹饪入门', '中国传统菜系的基本烹饪技巧', '视频', '烹饪', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:13');
 
 -- ----------------------------
 -- Table structure for tag
@@ -496,10 +499,10 @@ CREATE TABLE `user`  (
 -- ----------------------------
 -- Records of user
 -- ----------------------------
-INSERT INTO `user` VALUES (1, 'admin', '$2a$10$JJtFy15D9xQm4Sg.Mx43xOPgl6Q4L15krdpRMJXMDww6pvEvEfpym', '管理员', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde', 'admin@example.com', '13800000000', 1, '1990-01-01', '我是管理员', 1, '2025-05-16 15:42:50', '2025-05-22 18:32:46');
-INSERT INTO `user` VALUES (2, 'zhangsan', '$2a$10$JJtFy15D9xQm4Sg.Mx43xOPgl6Q4L15krdpRMJXMDww6pvEvEfpym', '张三', 'https://images.unsplash.com/photo-1527980965255-d3b416303d12', 'zhangsan@example.com', '13800000001', 1, '1992-05-20', '每天进步一点点', 1, '2025-05-16 15:42:50', '2025-05-22 18:32:47');
-INSERT INTO `user` VALUES (3, 'lisi', '$2a$10$JJtFy15D9xQm4Sg.Mx43xOPgl6Q4L15krdpRMJXMDww6pvEvEfpym', '李四', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330', 'lisi@example.com', '13800000002', 2, '1995-08-15', '追求梦想的道路上', 1, '2025-05-16 15:42:50', '2025-05-22 18:32:48');
-INSERT INTO `user` VALUES (4, 'wangwu', '$2a$10$JJtFy15D9xQm4Sg.Mx43xOPgl6Q4L15krdpRMJXMDww6pvEvEfpym', '王五', 'https://images.unsplash.com/photo-1599566150163-29194dcaad36', 'wangwu@example.com', '13800000003', 1, '1998-12-05', '不忘初心，方得始终', 1, '2025-05-16 15:42:50', '2025-05-22 18:32:48');
-INSERT INTO `user` VALUES (5, 'zhaoliu', '$2a$10$JJtFy15D9xQm4Sg.Mx43xOPgl6Q4L15krdpRMJXMDww6pvEvEfpym', '赵六', 'https://images.unsplash.com/photo-1607746882042-944635dfe10e', 'zhaoliu@example.com', '13800000004', 2, '1996-03-10', '努力奋斗，实现梦想', 1, '2025-05-16 15:42:50', '2025-05-22 18:33:05');
+INSERT INTO `user` VALUES (1, 'admin', '$2a$10$JJtFy15D9xQm4Sg.Mx43xOPgl6Q4L15krdpRMJXMDww6pvEvEfpym', '管理员', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'admin@example.com', '13800000000', 1, '1990-01-01', '我是管理员', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:51');
+INSERT INTO `user` VALUES (2, 'zhangsan', '$2a$10$JJtFy15D9xQm4Sg.Mx43xOPgl6Q4L15krdpRMJXMDww6pvEvEfpym', '张三', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'zhangsan@example.com', '13800000001', 1, '1992-05-20', '每天进步一点点', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:52');
+INSERT INTO `user` VALUES (3, 'lisi', '$2a$10$JJtFy15D9xQm4Sg.Mx43xOPgl6Q4L15krdpRMJXMDww6pvEvEfpym', '李四', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'lisi@example.com', '13800000002', 2, '1995-08-15', '追求梦想的道路上', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:52');
+INSERT INTO `user` VALUES (4, 'wangwu', '$2a$10$JJtFy15D9xQm4Sg.Mx43xOPgl6Q4L15krdpRMJXMDww6pvEvEfpym', '王五', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'wangwu@example.com', '13800000003', 1, '1998-12-05', '不忘初心，方得始终', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:53');
+INSERT INTO `user` VALUES (5, 'zhaoliu', '$2a$10$JJtFy15D9xQm4Sg.Mx43xOPgl6Q4L15krdpRMJXMDww6pvEvEfpym', '赵六', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 'zhaoliu@example.com', '13800000004', 2, '1996-03-10', '努力奋斗，实现梦想', 1, '2025-05-16 15:42:50', '2025-05-25 01:58:54');
 
 SET FOREIGN_KEY_CHECKS = 1;

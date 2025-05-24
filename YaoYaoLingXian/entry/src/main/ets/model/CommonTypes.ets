@@ -151,6 +151,7 @@ export interface User {
   followersCount?: number;
   followingCount?: number;
   createdAt?: string;
+  isFollowed?: boolean;
 }
 
 /**
@@ -235,6 +236,11 @@ export interface DreamStats {
  * 首页数据接口
  */
 export interface HomePageData {
+  userId: number;
+  username: string;
+  nickname: string;
+  avatar: string;
+  signature: string;
   dreamStats: DreamStats;
   todayTasks: PageResponse<Task>;
   upcomingTasks: PageResponse<Task>;
@@ -294,4 +300,8 @@ export interface UserInfo {
   signature?: string;
   status?: number;
   token?: string;
+  dreamsCount?: number;
+  completedDreamsCount?: number;
+  followersCount?: number;
+  followingCount?: number;
 } 

@@ -32,6 +32,9 @@ public class HomePageDTO {
     @Schema(description = "用户头像")
     private String avatar;
     
+    @Schema(description = "用户签名")
+    private String signature;
+    
     @Schema(description = "梦想统计")
     private DreamStatsDTO dreamStats;
     

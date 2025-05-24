@@ -15,6 +15,7 @@ import com.dreamplanner.repository.PostRepository;
 import com.dreamplanner.repository.UserRepository;
 import com.dreamplanner.service.PostService;
 import com.dreamplanner.vo.PostVO;
+import com.dreamplanner.vo.UserVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -489,9 +490,10 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> getPosts(int page, int pageSize, String category, Long userId) {
+    public Map<String, Object> getPosts(int page, int pageSize, String category, Long authorId, Long currentUserId) {
         // 添加日志记录
-        log.info("PostServiceImpl.getPosts方法被调用：page={}, pageSize={}, category={}, userId={}", page, pageSize, category, userId);
+        log.info("PostServiceImpl.getPosts方法被调用：page={}, pageSize={}, category={}, authorId={}, currentUserId={}", 
+                page, pageSize, category, authorId, currentUserId);
         
         // 创建分页请求
         Pageable pageable = PageRequest.of(page, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -499,10 +501,10 @@ public class PostServiceImpl implements PostService {
         Page<Post> postPage;
         
         // 根据条件查询帖子
-        if (userId != null) {
+        if (authorId != null) {
             // 查询特定用户的帖子
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new ResourceNotFoundException("用户不存在，ID: " + userId));
+            User user = userRepository.findById(authorId)
+                    .orElseThrow(() -> new ResourceNotFoundException("用户不存在，ID: " + authorId));
             postPage = postRepository.findByUserAndStatus(user, 1, pageable);
         } else if (category != null && !category.isEmpty()) {
             // 根据前端传递的特殊分类进行查询
@@ -513,7 +515,18 @@ public class PostServiceImpl implements PostService {
                 log.info("查询推荐内容，找到{}条记录", postPage.getTotalElements());
             } else if ("following".equalsIgnoreCase(category)) {
                 // 关注内容 - 获取当前用户
-                User currentUser = getCurrentUser();
+                User currentUser = null;
+                
+                // 如果提供了currentUserId，根据它获取用户
+                if (currentUserId != null) {
+                    currentUser = userRepository.findById(currentUserId).orElse(null);
+                }
+                
+                // 如果没有提供currentUserId或找不到用户，尝试从安全上下文获取
+                if (currentUser == null) {
+                    currentUser = getCurrentUser();
+                }
+                
                 if (currentUser != null && !currentUser.getFollowing().isEmpty()) {
                     // 获取关注用户的ID列表
                     List<Long> followingIds = currentUser.getFollowing().stream()
@@ -541,14 +554,72 @@ public class PostServiceImpl implements PostService {
             log.info("查询所有帖子（默认推荐），找到{}条记录", postPage.getTotalElements());
         }
         
+        // 获取用于检查点赞和关注状态的用户
+        User statusCheckUser = null;
+        
+        // 如果提供了currentUserId，根据它获取用户
+        if (currentUserId != null) {
+            statusCheckUser = userRepository.findById(currentUserId).orElse(null);
+        }
+        
+        // 如果没有提供currentUserId或找不到用户，尝试从安全上下文获取
+        if (statusCheckUser == null) {
+            statusCheckUser = getCurrentUser();
+        }
+        
+        // 最终用于检查状态的用户引用
+        final User finalStatusCheckUser = statusCheckUser;
+        
         // 转换为视图对象
         List<PostVO> postVOs = postPage.getContent().stream()
                 .map(post -> {
                     PostVO vo = new PostVO();
                     vo.setId(post.getId());
-                    vo.setUserId(post.getUser().getId());
-                    vo.setUsername(post.getUser().getUsername());
-                    vo.setUserAvatar(post.getUser().getAvatar());
+                    
+                    // 确保用户信息正确获取和设置
+                    if (post.getUser() != null) {
+                        User postAuthor = post.getUser();
+                        vo.setUserId(postAuthor.getId());
+                        vo.setUsername(postAuthor.getUsername());
+                        vo.setNickname(postAuthor.getNickname() != null ? postAuthor.getNickname() : postAuthor.getUsername());
+                        vo.setUserAvatar(postAuthor.getAvatar());
+                        
+                        // 设置作者信息
+                        UserVO authorVO = new UserVO();
+                        authorVO.setId(postAuthor.getId());
+                        authorVO.setUsername(postAuthor.getUsername());
+                        authorVO.setNickname(postAuthor.getNickname() != null ? postAuthor.getNickname() : postAuthor.getUsername());
+                        authorVO.setAvatar(postAuthor.getAvatar());
+                        authorVO.setIsFollowed(false); // 默认未关注
+                        
+                        vo.setAuthor(authorVO);
+                        
+                        // 如果提供了当前用户，检查是否已关注作者
+                        if (finalStatusCheckUser != null && finalStatusCheckUser.getId() != null && 
+                            !finalStatusCheckUser.getId().equals(postAuthor.getId())) {
+                            // 检查当前用户是否关注了帖子作者
+                            boolean isFollowing = finalStatusCheckUser.getFollowing().stream()
+                                .anyMatch(follow -> follow.getFollowed().getId().equals(postAuthor.getId()));
+                            vo.getAuthor().setIsFollowed(isFollowing);
+                        }
+                    } else {
+                        // 如果用户为空，设置默认值
+                        log.warn("帖子 {} 缺少用户信息，使用默认值", post.getId());
+                        vo.setUserId(0L);
+                        vo.setUsername("未知用户");
+                        vo.setNickname("未知用户");
+                        vo.setUserAvatar("");
+                        
+                        // 设置默认作者信息
+                        UserVO authorVO = new UserVO();
+                        authorVO.setId(0L);
+                        authorVO.setUsername("未知用户");
+                        authorVO.setNickname("未知用户");
+                        authorVO.setAvatar("");
+                        authorVO.setIsFollowed(false);
+                        
+                        vo.setAuthor(authorVO);
+                    }
                     
                     if (post.getDream() != null) {
                         vo.setDreamId(post.getDream().getId());
@@ -570,9 +641,8 @@ public class PostServiceImpl implements PostService {
                     vo.setUpdatedAt(post.getUpdatedAt());
                     
                     // 检查当前用户是否点赞
-                    User currentUser = getCurrentUser();
-                    if (currentUser != null) {
-                        vo.setLiked(likeRepository.findByPostAndUser(post, currentUser).isPresent());
+                    if (finalStatusCheckUser != null) {
+                        vo.setLiked(likeRepository.findByPostAndUser(post, finalStatusCheckUser).isPresent());
                     }
                     
                     return vo;
