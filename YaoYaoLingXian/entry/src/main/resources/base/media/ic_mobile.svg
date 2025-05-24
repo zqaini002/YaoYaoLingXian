@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <title>mobile</title>
-    <g id="mobile" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <path d="M17,2 L7,2 C5.9,2 5,2.9 5,4 L5,20 C5,21.1 5.9,22 7,22 L17,22 C18.1,22 19,21.1 19,20 L19,4 C19,2.9 18.1,2 17,2 Z M12,20 C11.45,20 11,19.55 11,19 C11,18.45 11.45,18 12,18 C12.55,18 13,18.45 13,19 C13,19.55 12.55,20 12,20 Z M7,17 L7,4 L17,4 L17,17 L7,17 Z" id="形状" fill="#1DA1F2"></path>
-    </g>
-</svg> 
