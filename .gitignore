@@ -1,13 +1,27 @@
 # =======================================
 # 全局规则 (适用于所有项目)
 # =======================================
+# 操作系统生成的文件
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.directory
+*.lnk
+
+# 临时文件和备份
 *.log
 *.bak
 *.tmp
 *.temp
 .lock
+~*
+*.swp
+*.swo
+*~.nib
+*.patch
+*.diff
 
 # IDE和编辑器通用
 .idea/
@@ -15,6 +29,31 @@ Thumbs.db
 *.sublime-*
 *.swp
 *.swo
+.project
+.atom/
+.buildpath
+nbproject/
+.settings/
+*.launch
+.classpath
+.factorypath
+.c9/
+*.launch
+*.tmproj
+.history/
+.hypothesis/
+
+# 压缩文件
+*.zip
+*.gz
+*.tar
+*.rar
+*.7z
+
+# 环境配置文件
+.env
+.env.local
+.env.*.local
 
 # =======================================
 # 前端项目 (YaoYaoLingXian - 鸿蒙OS/ArkTS)
@@ -22,9 +61,14 @@ Thumbs.db
 # 构建和编译输出
 YaoYaoLingXian/**/build/
 YaoYaoLingXian/dist/
+YaoYaoLingXian/out/
 YaoYaoLingXian/**/*.hap
 YaoYaoLingXian/**/*.app
 YaoYaoLingXian/**/*.rpk
+YaoYaoLingXian/**/*.aot
+YaoYaoLingXian/**/*.es5.js
+YaoYaoLingXian/**/*.tsbuildinfo
+YaoYaoLingXian/**/.output/
 
 # 鸿蒙OS特有
 YaoYaoLingXian/.hvigor/
@@ -36,29 +80,73 @@ YaoYaoLingXian/.cxx/
 YaoYaoLingXian/.clangd/
 YaoYaoLingXian/.clang-format
 YaoYaoLingXian/.clang-tidy
+YaoYaoLingXian/coverage/
+YaoYaoLingXian/reports/
+YaoYaoLingXian/tempIcons/
+YaoYaoLingXian/lib/
+YaoYaoLingXian/**/*.d.ts
 
 # 依赖和模块
 YaoYaoLingXian/node_modules/
 YaoYaoLingXian/oh_modules/
+YaoYaoLingXian/.npm/
+YaoYaoLingXian/.eslintcache
+YaoYaoLingXian/.stylelintcache
+YaoYaoLingXian/.pnp.*
+YaoYaoLingXian/.yarn/*
+!YaoYaoLingXian/.yarn/patches
+!YaoYaoLingXian/.yarn/plugins
+!YaoYaoLingXian/.yarn/releases
+!YaoYaoLingXian/.yarn/sdks
+!YaoYaoLingXian/.yarn/versions
+YaoYaoLingXian/jspm_packages/
 
 # 本地配置
 YaoYaoLingXian/local.properties
 YaoYaoLingXian/**/*.local
+YaoYaoLingXian/**/*.local.json
+YaoYaoLingXian/**/*.local.js
+YaoYaoLingXian/**/*.env.local
+YaoYaoLingXian/**/*.env.development.local
+YaoYaoLingXian/**/*.env.test.local
+YaoYaoLingXian/**/*.env.production.local
 
 # 日志文件
 YaoYaoLingXian/npm-debug.log*
 YaoYaoLingXian/yarn-debug.log*
 YaoYaoLingXian/yarn-error.log*
+YaoYaoLingXian/lerna-debug.log*
+YaoYaoLingXian/.pnpm-debug.log*
+YaoYaoLingXian/hvigor-status.log
+YaoYaoLingXian/hvigor-wrapper.log
 
 # 缓存文件
 YaoYaoLingXian/**/.cache/
 YaoYaoLingXian/**/.hbuilderx/
+YaoYaoLingXian/.sass-cache/
+YaoYaoLingXian/.parcel-cache/
+YaoYaoLingXian/.rpt2_cache/
+YaoYaoLingXian/.rts2_cache_cjs/
+YaoYaoLingXian/.rts2_cache_es/
+YaoYaoLingXian/.rts2_cache_umd/
+YaoYaoLingXian/.eslintcache
+YaoYaoLingXian/.stylelintcache
+YaoYaoLingXian/**/.ets/
+
+# 测试覆盖率报告
+YaoYaoLingXian/coverage/
+YaoYaoLingXian/.nyc_output/
+YaoYaoLingXian/jest-coverage/
+YaoYaoLingXian/reports/
 
 # =======================================
 # 后端项目 (Backend - Java/Spring Boot)
 # =======================================
 # 编译输出
 Backend/target/
+Backend/out/
+Backend/bin/
+Backend/build/
 Backend/**/*.class
 Backend/**/*.jar
 Backend/**/*.war
@@ -66,18 +154,42 @@ Backend/**/*.ear
 Backend/**/*.zip
 Backend/**/*.tar.gz
 Backend/**/*.rar
+Backend/**/*.so
+Backend/**/*.dll
+Backend/**/*.jnilib
+Backend/**/*.dylib
+Backend/**/hs_err_pid*
+Backend/**/*.hprof
 
 # Maven特有
 Backend/.mvn/
 Backend/mvnw
 Backend/mvnw.cmd
+Backend/.gradle/
+Backend/gradle/
+Backend/gradlew
+Backend/gradlew.bat
 !Backend/**/src/main/**/target/
 !Backend/**/src/test/**/target/
+Backend/pom.xml.tag
+Backend/pom.xml.releaseBackup
+Backend/pom.xml.versionsBackup
+Backend/pom.xml.next
+Backend/release.properties
+Backend/dependency-reduced-pom.xml
+Backend/buildNumber.properties
+Backend/.mvn/timing.properties
+Backend/.mvn/wrapper/maven-wrapper.jar
 
 # Spring Boot配置
 Backend/**/application-dev.properties
 Backend/**/application-prod.properties
 Backend/**/application-test.properties
+Backend/**/application-local.properties
+Backend/**/application-dev.yml
+Backend/**/application-prod.yml
+Backend/**/application-test.yml
+Backend/**/application-local.yml
 !Backend/**/src/main/resources/application.yml
 !Backend/**/src/main/resources/application.properties
 !Backend/**/src/main/resources/bootstrap.yml
@@ -85,24 +197,53 @@ Backend/**/application-test.properties
 
 # 文件上传目录
 Backend/uploads/
+Backend/temp-uploads/
+Backend/download/
 
 # 日志目录
 Backend/logs/
+Backend/log/
+Backend/**/*.log
+Backend/**/*.log.*
+Backend/**/nohup.out
 
 # 测试报告
 Backend/test-output/
 Backend/test-output-tests/
+Backend/coverage-reports/
+Backend/jacoco-reports/
+Backend/**/.allure/
+Backend/**/allure-results/
+Backend/surefire-reports/
 
 # Eclipse/STS特有
 Backend/.settings/
 Backend/.project
 Backend/.classpath
 Backend/.factorypath
+Backend/.apt_generated/
+Backend/.apt_generated_test/
+Backend/bin/
+Backend/.springBeans
+Backend/.sts4-cache/
 
 # IntelliJ IDEA特有
 Backend/**/*.iws
 Backend/**/*.iml
 Backend/**/*.ipr
+Backend/.idea/
+Backend/out/
+Backend/**/.idea_modules/
+Backend/**/atlassian-ide-plugin.xml
+Backend/**/.idea/replstate.xml
+Backend/**/.idea/sonarlint/
+Backend/**/.idea/httpRequests/
+
+# NetBeans特有
+Backend/nbproject/private/
+Backend/nbbuild/
+Backend/nbdist/
+Backend/.nb-gradle/
 
 # 敏感信息配置
 Backend/**/resources/application-dev.yml
@@ -111,6 +252,10 @@ Backend/**/resources/application-test.yml
 Backend/**/resources/secret.properties
 Backend/**/*-secret.properties
 Backend/**/*-credentials.properties
+Backend/**/.env
+Backend/**/.env.*
+Backend/**/src/main/resources/config/application-*.yml
+Backend/**/src/main/resources/config/application-*.properties
 
 # 安全敏感配置
 Backend/**/src/main/resources/keystore.jks
@@ -120,17 +265,73 @@ Backend/**/src/main/resources/keys/
 Backend/**/*.pem
 Backend/**/*.key
 Backend/**/*.p12
+Backend/**/*.pfx
+Backend/**/*.cer
+Backend/**/*.crt
+Backend/**/*.jks
 
 # 数据库临时文件
 Backend/**/*.db
 Backend/**/*.sqlite
 Backend/**/*.h2.db
+Backend/**/*.h2.data
+Backend/**/*.trace.db
+Backend/**/*.lock.db
+Backend/**/hsqldb/
+Backend/**/*.mdb
+Backend/**/*.ldb
+Backend/**/*.frm
+Backend/**/*.MYD
+Backend/**/*.MYI
+
+# JavaDoc生成的文件
+Backend/javadoc/
+Backend/apidocs/
+Backend/docs/javadoc/
 
 # =======================================
 # 项目特有目录和文件
 # =======================================
 # 文档和临时文件
 /doc/private/
+/doc/internal/
+/docs/private/
+/docs/internal/
 /tmp/
 /temp/
+/.tmp/
+/.temp/
+
+# 个人配置文件
+*.private.*
+*.personal.*
+*-personal.*
+*-private.*
+
+# 机密文件
+credentials.json
+*_credentials.json
+secrets.json
+*_secrets.json
+tokens.json
+*_tokens.json
+
+# 大型媒体文件（应使用Git LFS）
+*.mp4
+*.mov
+*.avi
+*.wmv
+*.flv
+*.mkv
+*.mp3
+*.wav
+*.flac
+*.ogg
+*.psd
+*.ai
+*.indd
+*.pdf
+*.large.jpg
+*.large.png
+*.large.gif
 
