@@ -9,6 +9,15 @@ import { UserSession } from '../utils/auth/UserSession';
 // 导出需要的类型，解决模块导出问题
 export { UserInfo, PageResponse } from '../model/CommonTypes';
 
+// 在CommonTypes之后，定义辅助接口
+export interface UserRequest {
+  id: number;
+}
+
+export interface DreamRequest {
+  id: number;
+}
+
 /**
  * 帖子API数据结构
  */
@@ -162,8 +171,8 @@ export interface RequestData {
   pageSize?: number;
   days?: number;
   tags?: string[];
-  // 图片数组
-  images?: string[];
+  // 图片字段 - 修改为string类型以匹配Post接口
+  images?: string;
   imageUrls?: string[];
   
   // 用户认证相关字段
@@ -175,6 +184,15 @@ export interface RequestData {
   
   // 新增参数
   currentUserId?: number;
+  
+  // 对象类型字段
+  user?: UserRequest;
+  dream?: DreamRequest;
+  
+  // 计数字段
+  likeCount?: number;
+  commentCount?: number;
+  viewCount?: number;
 }
 
 /**
@@ -750,7 +768,8 @@ export function getPosts(page: number, size: number, type: number, currentUserId
                 if (typeof post.images === 'string') {
                   imagesString = post.images;
                 } else if (Array.isArray(post.images)) {
-                  imagesString = post.images.join(',');
+                  // 兼容处理：如果后端返回了数组（这不应该发生，但为了防御性编程）
+                  imagesString = String(post.images);
                 } else if (post.images) {
                   imagesString = String(post.images);
                 }
@@ -996,15 +1015,31 @@ export function createComment(postId: number, comment: Comment): Promise<Comment
  * @returns 创建的帖子信息
  */
 export function createPost(post: Post): Promise<Post> {
-  // 创建明确类型的对象，避免结构化类型问题
-  const requestData: RequestData = {
-    title: post.title || '',
-    content: post.content || '',
-    dreamId: post.dreamId,
-    // 确保images作为数组传递
-    images: Array.isArray(post.images) ? post.images : []
-  };
+  // 创建请求数据对象
+  const requestData: RequestData = {};
   
+  // 设置基本字段
+  requestData.title = post.title || '';
+  requestData.content = post.content || '';
+  requestData.images = post.images;
+  requestData.status = 1; // 1表示正常状态
+  requestData.likeCount = 0;
+  requestData.commentCount = 0;
+  requestData.viewCount = 0;
+  
+  // 设置用户关联
+  if (post.userId) {
+    const user: UserRequest = { id: post.userId };
+    requestData.user = user;
+  }
+  
+  // 设置梦想关联
+  if (post.dreamId) {
+    const dream: DreamRequest = { id: post.dreamId };
+    requestData.dream = dream;
+  }
+  
+  console.info(`创建帖子请求数据: ${JSON.stringify(requestData)}`);
   return request<Post>(RequestMethod.POST, '/posts', EmptyParams, requestData);
 }
 

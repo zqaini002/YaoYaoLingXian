@@ -126,7 +126,7 @@ export interface Post {
   dreamId?: number;
   title: string;
   content: string;
-  images?: string[];  // 确保定义为string[]类型
+  images?: string;  // 修改为string类型，与后端模型匹配
   imageUrls?: string[];  // 前端处理后的图片URL数组
   likeCount: number;
   commentCount: number;

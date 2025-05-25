@@ -288,74 +288,109 @@ export struct CommunityPage {
   }
 
   build() {
-    Column() {
-      // 顶部标题栏
-      Row() {
-        Text('梦想社区')
-          .fontSize(CommonConstants.FONT_SIZE_XXLARGE)
-          .fontWeight(FontWeight.Bold)
+    Stack() {
+      Column() {
+        // 顶部标题栏
+        Row() {
+          Text('梦想社区')
+            .fontSize(CommonConstants.FONT_SIZE_XXLARGE)
+            .fontWeight(FontWeight.Bold)
+          
+          Image(AppIcons.add)
+            .width(24)
+            .height(24)
+            .fillColor($r('app.color.text_primary'))
+            .margin({ left: CommonConstants.MARGIN_LARGE })
+            .onClick(() => {
+              // 导航到发布帖子页面
+              router.pushUrl({
+                url: 'pages/community/PostCreatePage'
+              });
+            })
+        }
+        .width('100%')
+        .justifyContent(FlexAlign.SpaceBetween)
+        .alignItems(VerticalAlign.Center)
+        .padding({ 
+          top: CommonConstants.MARGIN_LARGE, 
+          bottom: CommonConstants.MARGIN_NORMAL,
+          left: CommonConstants.MARGIN_LARGE,
+          right: CommonConstants.MARGIN_LARGE
+        })
         
-        Image(AppIcons.add)
-          .width(24)
-          .height(24)
-          .fillColor($r('app.color.text_primary'))
-          .margin({ left: CommonConstants.MARGIN_LARGE })
-          .onClick(() => {
-            // 导航到发布帖子页面
-            router.pushUrl({
-              url: 'pages/community/PostCreatePage'
-            });
+        // 自定义标签栏
+        Row() {
+          ForEach(this.tabs, (tabName: string, index: number) => {
+            Column() {
+              Text(tabName)
+                .fontSize(CommonConstants.FONT_SIZE_MEDIUM)
+                .fontWeight(this.selectedTab === index ? FontWeight.Bold : FontWeight.Normal)
+                .fontColor(this.selectedTab === index ? $r('app.color.primary_color') : $r('app.color.text_primary'))
+                .margin({ top: CommonConstants.MARGIN_SMALL, bottom: CommonConstants.MARGIN_SMALL })
+              
+              Divider()
+                .width('60%')
+                .height(3)
+                .backgroundColor(this.selectedTab === index ? $r('app.color.primary_color') : 'transparent')
+            }
+            .width('33.3%') // 三等分宽度
+            .height(48)
+            .alignItems(HorizontalAlign.Center)
+            .justifyContent(FlexAlign.Center)
+            .onClick(() => {
+              if (this.selectedTab !== index) {
+                this.selectedTab = index;
+                this.fetchPosts();
+              }
+            })
           })
-      }
-      .width('100%')
-      .justifyContent(FlexAlign.SpaceBetween)
-      .alignItems(VerticalAlign.Center)
-      .padding({ 
-        top: CommonConstants.MARGIN_LARGE, 
-        bottom: CommonConstants.MARGIN_NORMAL,
-        left: CommonConstants.MARGIN_LARGE,
-        right: CommonConstants.MARGIN_LARGE
-      })
-      
-      // 自定义标签栏
-      Row() {
-        ForEach(this.tabs, (tabName: string, index: number) => {
-          Column() {
-            Text(tabName)
-              .fontSize(CommonConstants.FONT_SIZE_MEDIUM)
-              .fontWeight(this.selectedTab === index ? FontWeight.Bold : FontWeight.Normal)
-              .fontColor(this.selectedTab === index ? $r('app.color.primary_color') : $r('app.color.text_primary'))
-              .margin({ top: CommonConstants.MARGIN_SMALL, bottom: CommonConstants.MARGIN_SMALL })
-            
-            Divider()
-              .width('60%')
-              .height(3)
-              .backgroundColor(this.selectedTab === index ? $r('app.color.primary_color') : 'transparent')
-          }
-          .width('33.3%') // 三等分宽度
-          .height(48)
-          .alignItems(HorizontalAlign.Center)
-          .justifyContent(FlexAlign.Center)
-          .onClick(() => {
-            if (this.selectedTab !== index) {
-              this.selectedTab = index;
-              this.fetchPosts();
+        }
+        .width('100%')
+        .padding({ left: 16, right: 16 })
+        
+        // 内容区域
+        Stack({ alignContent: Alignment.TopStart }) {
+          ForEach(this.tabs, (tabName: string, index: number) => {
+            if (this.selectedTab === index) {
+              this.postList()
             }
           })
-        })
+        }
+        .layoutWeight(1)
       }
       .width('100%')
-      .padding({ left: 16, right: 16 })
+      .height('100%')
       
-      // 内容区域
-      Stack({ alignContent: Alignment.TopStart }) {
-        ForEach(this.tabs, (tabName: string, index: number) => {
-          if (this.selectedTab === index) {
-            this.postList()
-          }
-        })
+      // 添加浮动按钮
+      Button({ type: ButtonType.Circle }) {
+        Image($r('app.media.add'))
+          .width(24)
+          .height(24)
+          .fillColor(Color.White)
       }
-      .layoutWeight(1)
+      .width(56)
+      .height(56)
+      .backgroundColor($r('app.color.primary_color'))
+      .position({
+        x: '82%',
+        y: '85%'
+      })
+      .shadow({
+        radius: 8,
+        color: '#33000000',
+        offsetX: 2,
+        offsetY: 4
+      })
+      .onClick(() => {
+        router.pushUrl({
+          url: 'pages/community/PostCreatePage'
+        });
+      })
+      
+      // 评论对话框
+      if (this.showCommentDialog) {
+        this.CommentDialog()
+      }
     }
     .width('100%')
     .height('100%')
@@ -698,11 +733,6 @@ export struct CommunityPage {
     }
     .width('100%')
     .height('100%')
-    
-    // 评论对话框
-    if (this.showCommentDialog) {
-      this.CommentDialog()
-    }
   }
   
   @Builder

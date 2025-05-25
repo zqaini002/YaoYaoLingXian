@@ -5,6 +5,36 @@ import router from '@ohos.router';
 import { UserSession } from '../../utils/auth/UserSession';
 import * as ApiService from '../../services/ApiService';
 import picker from '@ohos.file.picker';
+import { photoAccessHelper } from '@kit.MediaLibraryKit';
+import dataSharePredicates from '@ohos.data.dataSharePredicates';
+import util from '@ohos.util';
+import fileIo from '@ohos.fileio';
+
+/**
+ * 接口定义部分
+ */
+
+// 提示框参数
+interface ToastOptions {
+  message: string;
+  duration?: number;
+}
+
+// 图片请求选项
+interface RequestOptions {
+  deliveryMode: number;
+}
+
+// 查询选项
+interface FetchOptions {
+  fetchColumns: string[];
+  predicates: dataSharePredicates.DataSharePredicates;
+}
+
+// 媒体资源处理器接口
+interface MediaAssetDataHandlerInterface<T> {
+  onDataPrepared(data: T): void;
+}
 
 @Entry
 @Component
@@ -18,7 +48,7 @@ export struct PostCreatePage {
     commentCount: 0,
     createdAt: '',
     updatedAt: '',
-    images: []
+    images: ''
   };
   
   @State selectedImages: string[] = [];
@@ -46,10 +76,11 @@ export struct PostCreatePage {
       this.isLoadingDreams = true;
       const userId = this.userSession.getUserId();
       if (!userId) {
-        promptAction.showToast({
+        const toastOpts: ToastOptions = { 
           message: '无法获取用户信息',
           duration: 2000
-        });
+        };
+        promptAction.showToast(toastOpts);
         return;
       }
       
@@ -59,10 +90,12 @@ export struct PostCreatePage {
       this.userDreams = dreams.filter(dream => dream.isPublic === 1);
       
     } catch (error) {
-      promptAction.showToast({
-        message: `加载梦想列表失败: ${error instanceof Error ? error.message : String(error)}`,
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      const toastOpts: ToastOptions = { 
+        message: `加载梦想列表失败: ${errorMsg}`,
         duration: 2000
-      });
+      };
+      promptAction.showToast(toastOpts);
     } finally {
       this.isLoadingDreams = false;
     }
@@ -78,17 +111,30 @@ export struct PostCreatePage {
       photoSelectOptions.MIMEType = picker.PhotoViewMIMETypes.IMAGE_TYPE;
       photoSelectOptions.maxSelectNumber = 9;
       
-      // 启动图片选择
-      const photoSelectResult = await photoPicker.select(photoSelectOptions);
-      if (photoSelectResult && photoSelectResult.photoUris && photoSelectResult.photoUris.length > 0) {
+      // 使用Promise方式调用
+      photoPicker.select(photoSelectOptions)
+        .then((photos) => {
+          if (photos && photos.photoUris && photos.photoUris.length > 0) {
         // 限制最多9张图片
-        this.selectedImages = photoSelectResult.photoUris.slice(0, 9);
-      }
+            this.selectedImages = photos.photoUris.slice(0, 9);
+          }
+        })
+        .catch((err: Error) => {
+          console.error(`选择图片失败: ${err.message}`);
+          const toastOpts: ToastOptions = { 
+            message: `选择图片失败: ${err.message}`, 
+            duration: 2000 
+          };
+          promptAction.showToast(toastOpts);
+        });
     } catch (error) {
-      promptAction.showToast({
-        message: `选择图片失败: ${error instanceof Error ? error.message : String(error)}`,
+      const err: Error = error instanceof Error ? error : new Error(String(error));
+      console.error(`选择图片失败: ${err.message}`);
+      const toastOpts: ToastOptions = { 
+        message: `选择图片失败: ${err.message}`,
         duration: 2000
-      });
+      };
+      promptAction.showToast(toastOpts);
     }
   }
   
@@ -104,10 +150,11 @@ export struct PostCreatePage {
     try {
       // 检查用户是否已登录
       if (!this.userSession.isLoggedIn()) {
-        promptAction.showToast({
+        const toastOpts: ToastOptions = { 
           message: '请先登录后再发布',
           duration: 2000
-        });
+        };
+        promptAction.showToast(toastOpts);
         // 跳转到登录页面
         router.pushUrl({
           url: 'pages/user/LoginPage',
@@ -120,14 +167,16 @@ export struct PostCreatePage {
 
       // 表单验证
       if (!this.post.content.trim()) {
-        promptAction.showToast({
+        const toastOpts: ToastOptions = { 
           message: '内容不能为空',
           duration: 2000
-        });
+        };
+        promptAction.showToast(toastOpts);
         return;
       }
       
       this.isSubmitting = true;
+      console.info('开始提交帖子，标题：', this.post.title || '无标题');
       
       // 确保设置了用户ID
       this.post.userId = this.userSession.getUserId() || 0;
@@ -135,24 +184,46 @@ export struct PostCreatePage {
       // 如果有选择图片，需要先上传图片
       let uploadedImages: string[] = [];
       if (this.selectedImages.length > 0) {
+        console.info(`开始上传图片，数量: ${this.selectedImages.length}`);
+        
         // 遍历上传图片
         for (const imageUri of this.selectedImages) {
           try {
-            const response = await ApiService.uploadImage({
+            console.info(`处理图片: ${imageUri}`);
+            let base64Data = await this.convertImageToBase64(imageUri);
+            
+            if (base64Data) {
+              // 构造上传参数
+              const uploadParams: ApiService.UploadImageParams = {
               fileName: imageUri.substring(imageUri.lastIndexOf('/') + 1),
-              base64Image: await this.convertImageToBase64(imageUri)
-            });
+                base64Image: base64Data
+              };
+              
+              console.info('上传图片参数准备完成，开始上传...');
+              const response = await ApiService.uploadImage(uploadParams);
             
             if (response && response.url) {
+                console.info(`图片上传成功，URL: ${response.url}`);
               uploadedImages.push(response.url);
+              } else {
+                console.error('图片上传返回结果异常:', response);
+              }
             }
           } catch (error) {
-            console.error(`上传图片失败: ${error instanceof Error ? error.message : String(error)}`);
+            const err: Error = error instanceof Error ? error : new Error(String(error));
+            console.error(`上传图片失败: ${err.message}`);
+            const toastOpts: ToastOptions = { 
+              message: `图片上传失败: ${err.message}`,
+              duration: 2000
+            };
+            promptAction.showToast(toastOpts);
           }
         }
       }
       
-      // 创建新的Post对象而不是使用spread运算符
+      console.info(`图片上传完成，成功上传${uploadedImages.length}张图片`);
+      
+      // 创建新的Post对象
       const postData: Post = {
         id: this.post.id,
         userId: this.post.userId,
@@ -163,35 +234,152 @@ export struct PostCreatePage {
         createdAt: this.post.createdAt,
         updatedAt: this.post.updatedAt,
         dreamId: this.post.dreamId,
-        images: uploadedImages
+        // 直接设置为空字符串，让ApiService处理转换
+        images: ''
       };
       
-      // 调用API创建帖子
-      await ApiService.createPost(postData);
+      // 记录上传的图片URLs供日志查看
+      console.info('上传的图片URLs:', JSON.stringify(uploadedImages));
       
-      promptAction.showToast({
+      // 处理images字段 - 如果有上传图片，将数组转换为逗号分隔字符串
+      if (uploadedImages.length > 0) {
+        postData.images = uploadedImages.join(',');
+      }
+      
+      console.info('准备提交帖子数据:', JSON.stringify(postData));
+      
+      // 调用API创建帖子
+      const createdPost = await ApiService.createPost(postData);
+      console.info('帖子创建成功:', createdPost);
+      
+      const toastOpts: ToastOptions = { 
         message: '发布成功',
         duration: 2000
-      });
+      };
+      promptAction.showToast(toastOpts);
       
       // 返回社区页面
       router.back();
       
     } catch (error) {
-      promptAction.showToast({
-        message: `发布失败: ${error instanceof Error ? error.message : String(error)}`,
+      const err: Error = error instanceof Error ? error : new Error(String(error));
+      console.error(`发布失败: ${err.message}`);
+      const toastOpts: ToastOptions = { 
+        message: `发布失败: ${err.message}`,
         duration: 2000
-      });
+      };
+      promptAction.showToast(toastOpts);
     } finally {
       this.isSubmitting = false;
     }
   }
   
   // 图片转Base64
-  private async convertImageToBase64(imageUri: string): Promise<string> {
-    // 这里是模拟实现，实际项目中需要根据鸿蒙OS的图片处理API来实现
-    // 返回一个假的Base64字符串，实际项目中需要替换为真实转换逻辑
-    return "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigD//2Q==";
+  private async convertImageToBase64(imageUri: string): Promise<string | null> {
+    try {
+      // 直接文件路径读取
+      if (imageUri.startsWith('file://') && !imageUri.startsWith('file://media/')) {
+        try {
+          const realPath: string = imageUri.replace('file://', '');
+          await fileIo.access(realPath);
+          const fd: number = await fileIo.open(realPath, 0);
+          const stat: fileIo.Stat = await fileIo.stat(realPath);
+          const fileSize: number = stat.size;
+          const buffer: ArrayBuffer = new ArrayBuffer(fileSize);
+          await fileIo.read(fd, buffer);
+          await fileIo.close(fd);
+          const base64Helper: util.Base64Helper = new util.Base64Helper();
+          return base64Helper.encodeToStringSync(new Uint8Array(buffer));
+        } catch (err) {
+          console.error('直接文件路径读取失败，尝试使用photoAccessHelper', err);
+        }
+      }
+      
+      // 使用photoAccessHelper正确的API
+      const context = getContext(this);
+      const phAccessHelper = photoAccessHelper.getPhotoAccessHelper(context);
+      
+      // 构建查询条件
+      let predicates = new dataSharePredicates.DataSharePredicates();
+      predicates.equalTo('uri', imageUri);
+      let fetchOptions: FetchOptions = {
+        fetchColumns: [],
+        predicates: predicates
+      };
+      
+      // 返回Promise
+      return new Promise<string | null>((resolve, reject) => {
+        // 定义数据处理器
+        class MediaDataHandler implements MediaAssetDataHandlerInterface<ArrayBuffer> {
+          onDataPrepared(data: ArrayBuffer): void {
+            if (data === undefined) {
+              console.error('获取图片数据失败');
+              reject(new Error('获取图片数据失败'));
+              return;
+            }
+            
+            try {
+              // 转换为Base64
+              const uint8Array = new Uint8Array(data);
+              const base64Helper: util.Base64Helper = new util.Base64Helper();
+              const base64 = base64Helper.encodeToStringSync(uint8Array);
+              
+              // 添加适当的数据URL前缀
+              let contentType = 'image/jpeg'; // 默认为JPEG
+              if (imageUri.toLowerCase().endsWith('.png')) {
+                contentType = 'image/png';
+              } else if (imageUri.toLowerCase().endsWith('.gif')) {
+                contentType = 'image/gif';
+              } else if (imageUri.toLowerCase().endsWith('.webp')) {
+                contentType = 'image/webp';
+              }
+              
+              // 添加数据URL前缀
+              const base64WithPrefix = `data:${contentType};base64,${base64}`;
+              resolve(base64WithPrefix);
+            } catch (err) {
+              console.error('Base64转换失败:', err);
+              reject(err);
+            }
+          }
+        }
+        
+        // 先获取资源
+        phAccessHelper.getAssets(fetchOptions)
+          .then(async (fetchResult) => {
+            if (fetchResult.getCount() > 0) {
+              const photoAsset = await fetchResult.getFirstObject();
+              if (photoAsset) {
+                // 配置请求选项
+                const requestOptions: RequestOptions = {
+                  deliveryMode: 1  // 使用数字1代表HIGH_QUALITY_MODE
+                };
+                
+                // 请求图片数据
+                const handler = new MediaDataHandler();
+                photoAccessHelper.MediaAssetManager.requestImageData(context, photoAsset, requestOptions, handler)
+                  .catch((err: Error) => {
+                    console.error(`获取图片数据失败: ${err.name}, ${err.message}`);
+                    reject(err);
+                  });
+              } else {
+                console.error('未找到图片资源');
+                reject(new Error('未找到图片资源'));
+              }
+            } else {
+              console.error('未找到匹配的图片资源');
+              reject(new Error('未找到匹配的图片资源'));
+            }
+          })
+          .catch((error: Error) => {
+            console.error('获取资源失败:', error);
+            reject(error instanceof Error ? error : new Error(String(error)));
+          });
+      });
+    } catch (error) {
+      console.error('图片处理过程中发生错误:', error);
+      throw error instanceof Error ? error : new Error(String(error));
+    }
   }
 
   build() {
