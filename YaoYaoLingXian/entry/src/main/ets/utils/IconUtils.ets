@@ -78,6 +78,7 @@ export class AppIcons {
   static readonly settings: Resource = $r('app.media.settings');
   static readonly emptyState: Resource = $r('app.media.ic_empty_task'); // 修改为任务空状态图标
   static readonly default_icon: Resource = $r('app.media.default_icon');
+  static readonly dynamic: Resource = $r('app.media.ic_dynamic'); // 添加动态图标
 }
 
 /**

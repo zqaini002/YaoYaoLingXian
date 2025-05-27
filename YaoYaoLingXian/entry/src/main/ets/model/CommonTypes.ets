@@ -136,6 +136,11 @@ export interface Post {
   author?: User;
   dream?: DreamSimple;
   isLiked?: boolean;
+  
+  // 添加这些字段以匹配后端返回的数据结构
+  username?: string;     // 用户名
+  nickname?: string;     // 昵称
+  userAvatar?: string;   // 用户头像
 }
 
 /**

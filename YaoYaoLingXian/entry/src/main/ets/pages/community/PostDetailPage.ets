@@ -5,6 +5,13 @@ import router from '@ohos.router';
 import * as ApiService from '../../services/ApiService';
 import { UserSession } from '../../utils/auth/UserSession';
 
+interface GeneratedObjectLiteralInterface_1 {
+  id: number;
+  username: string;
+  nickname: string;
+  avatar: string;
+}
+
 @Entry
 @Component
 export struct PostDetailPage {
@@ -44,6 +51,27 @@ export struct PostDetailPage {
       try {
       this.post = await ApiService.getPostById(this.postId);
       
+        // 添加详细日志
+        console.info(`获取到帖子详情数据: ${JSON.stringify({
+          id: this.post?.id,
+          title: this.post?.title,
+          // 输出作者信息
+          author: this.post?.author ? ({
+            id: this.post.author.id,
+            username: this.post.author.username,
+            nickname: this.post.author.nickname,
+            avatar: this.post.author.avatar?.substring(0, 50) + '...'
+          } as GeneratedObjectLiteralInterface_1) : '未定义',
+          // 原始用户信息
+          userId: this.post?.userId,
+          username: this.post?.username,
+          nickname: this.post?.nickname,
+          userAvatar: this.post?.userAvatar,
+          // 图片信息
+          hasImages: this.post?.images ? true : false,
+          imageCount: this.post?.imageUrls?.length || 0
+        })}`);
+        
         // 确保所有计数字段都有默认值，防止undefined.toString()错误
         if (this.post) {
           // 初始化计数字段，避免undefined错误
@@ -58,14 +86,18 @@ export struct PostDetailPage {
             if (typeof imagesValue === 'string' && imagesValue.trim() !== '') {
               // 如果是字符串，则分割为数组
               this.post.imageUrls = imagesValue.split(',').filter((url: string) => url && url.trim() !== '');
+              console.info(`处理后的图片URLs: ${this.post.imageUrls.length}张`);
             } else if (Array.isArray(imagesValue)) {
               // 如果已经是数组，直接使用
               this.post.imageUrls = imagesValue;
+              console.info(`图片URLs数组: ${this.post.imageUrls.length}张`);
       } else {
         this.post.imageUrls = [];
+              console.info(`无有效图片`);
             }
           } else if (this.post) {
             this.post.imageUrls = [];
+            console.info(`帖子无图片字段`);
           }
         }
       } catch (error) {
@@ -359,18 +391,23 @@ export struct PostDetailPage {
           Column() {
             // 作者信息
             Row() {
-              Image(this.post.author?.avatar || '')
+              Image(this.post?.author?.avatar || '')
                 .width(48)
                 .height(48)
                 .borderRadius(24)
                 .margin({ right: CommonConstants.MARGIN_MEDIUM })
+                .alt($r('app.media.default_avatar'))
+                .onError(() => {
+                  console.warn('作者头像加载失败');
+                })
               
               Column() {
-                Text(this.post.author?.nickname || '未知用户')
+                // 显示作者昵称，使用多层次的降级策略
+                Text(this.post?.author?.nickname || this.post?.author?.username || this.post?.nickname || this.post?.username || '未知用户')
                   .fontSize(CommonConstants.FONT_SIZE_NORMAL)
                   .fontWeight(FontWeight.Medium)
                 
-                Text(this.post.createdAt)
+                Text(this.post?.createdAt || '')
                   .fontSize(CommonConstants.FONT_SIZE_SMALL)
                   .fontColor($r('app.color.text_tertiary'))
                   .margin({ top: 2 })
@@ -378,20 +415,7 @@ export struct PostDetailPage {
               .alignItems(HorizontalAlign.Start)
               .layoutWeight(1)
               
-              // 关注按钮
-              Button('关注')
-                .fontSize(CommonConstants.FONT_SIZE_SMALL)
-                .fontColor($r('app.color.primary_color'))
-                .backgroundColor(Color.Transparent)
-                .borderWidth(1)
-                .borderColor($r('app.color.primary_color'))
-                .borderRadius(CommonConstants.RADIUS_SMALL)
-                .padding({
-                  left: CommonConstants.MARGIN_MEDIUM,
-                  right: CommonConstants.MARGIN_MEDIUM,
-                  top: 4,
-                  bottom: 4
-                })
+              // 关注按钮已移除
             }
             .width('100%')
             .alignItems(VerticalAlign.Center)

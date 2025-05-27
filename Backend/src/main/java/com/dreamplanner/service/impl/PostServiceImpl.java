@@ -2,11 +2,7 @@ package com.dreamplanner.service.impl;
 
 import com.dreamplanner.dto.CommentDTO;
 import com.dreamplanner.dto.PostDTO;
-import com.dreamplanner.entity.Comment;
-import com.dreamplanner.entity.Dream;
-import com.dreamplanner.entity.Like;
-import com.dreamplanner.entity.Post;
-import com.dreamplanner.entity.User;
+import com.dreamplanner.entity.*;
 import com.dreamplanner.exception.ResourceNotFoundException;
 import com.dreamplanner.repository.CommentRepository;
 import com.dreamplanner.repository.DreamRepository;
@@ -456,9 +452,55 @@ public class PostServiceImpl implements PostService {
         // 转换为 PostVO 对象并返回
         PostVO postVO = new PostVO();
         postVO.setId(post.getId());
-        postVO.setUserId(post.getUser().getId());
-        postVO.setUsername(post.getUser().getUsername());
-        postVO.setUserAvatar(post.getUser().getAvatar());
+        
+        // 设置用户和作者信息
+        if (post.getUser() != null) {
+            User author = post.getUser();
+            postVO.setUserId(author.getId());
+            postVO.setUsername(author.getUsername());
+            postVO.setNickname(author.getNickname() != null ? author.getNickname() : author.getUsername());
+            postVO.setUserAvatar(author.getAvatar());
+            
+            // 明确设置author对象，以便客户端能正确显示作者信息
+            UserVO authorVO = new UserVO();
+            authorVO.setId(author.getId());
+            authorVO.setUsername(author.getUsername());
+            authorVO.setNickname(author.getNickname() != null ? author.getNickname() : author.getUsername());
+            authorVO.setAvatar(author.getAvatar());
+            
+            // 检查当前用户是否已关注帖子作者
+            User currentUser = getCurrentUser();
+            if (currentUser != null && !currentUser.getId().equals(author.getId())) {
+                boolean isFollowing = false;
+                // 检查当前用户的关注列表
+                for (Follow follow : currentUser.getFollowing()) {
+                    if (follow.getFollowed().getId().equals(author.getId())) {
+                        isFollowing = true;
+                        break;
+                    }
+                }
+                authorVO.setIsFollowed(isFollowing);
+            } else {
+                authorVO.setIsFollowed(false);
+            }
+            
+            postVO.setAuthor(authorVO);
+        } else {
+            // 如果用户为空，提供默认值
+            log.warn("帖子 {} 缺少用户信息，使用默认值", post.getId());
+            postVO.setUserId(0L);
+            postVO.setUsername("未知用户");
+            postVO.setNickname("未知用户");
+            postVO.setUserAvatar("");
+            
+            UserVO defaultAuthor = new UserVO();
+            defaultAuthor.setId(0L);
+            defaultAuthor.setUsername("未知用户");
+            defaultAuthor.setNickname("未知用户");
+            defaultAuthor.setAvatar("");
+            defaultAuthor.setIsFollowed(false);
+            postVO.setAuthor(defaultAuthor);
+        }
         
         if (post.getDream() != null) {
             postVO.setDreamId(post.getDream().getId());
@@ -483,6 +525,8 @@ public class PostServiceImpl implements PostService {
         User currentUser = getCurrentUser();
         if (currentUser != null) {
             postVO.setLiked(likeRepository.findByPostAndUser(post, currentUser).isPresent());
+        } else {
+            postVO.setLiked(false);
         }
         
         return postVO;

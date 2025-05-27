@@ -184,6 +184,7 @@ export interface RequestData {
   
   // 新增参数
   currentUserId?: number;
+  authorId?: number; // 添加authorId字段，用于筛选特定用户的帖子
   
   // 对象类型字段
   user?: UserRequest;
@@ -1052,12 +1053,82 @@ export function createPost(post: Post): Promise<Post> {
 export function getPostById(id: number): Promise<Post> {
   try {
     console.info(`获取帖子详情, id: ${id}`);
-    return request<Post>(RequestMethod.GET, `/posts/${id}`)
-      .then(post => {
-        // 处理帖子作者头像URL
-        if (post && post.author && post.author.avatar) {
-          post.author.avatar = processImageUrl(post.author.avatar);
+    return request<ApiResponse<Post>>(RequestMethod.GET, `/posts/${id}`)
+      .then(response => {
+        if (!response || !response.data) {
+          console.error('获取帖子详情失败: 无效的API响应格式');
+          throw new Error('获取帖子详情失败: 服务器返回无效数据');
         }
+        
+        const post = response.data;
+        console.info(`收到帖子详情: ID=${post.id}, 作者信息=${post.author ? '已包含' : '不存在'}`);
+        
+        // 确保author字段存在，如果不存在则根据其他字段创建
+        if (!post.author && post.userId) {
+          // 使用postVO中的用户相关字段创建author对象
+          const userId = post.userId || 0;
+          const username = post.username || '未知用户';
+          const nickname = post.nickname || post.username || '未知用户';
+          const avatar = post.userAvatar || '';
+          
+          console.info(`创建作者对象: userId=${userId}, username=${username}, nickname=${nickname}`);
+          
+          post.author = {
+            id: userId,
+            username: username,
+            nickname: nickname,
+            avatar: avatar,
+            isFollowed: false
+          };
+        } else if (!post.author) {
+          // 如果没有用户相关信息，则创建默认作者对象
+          post.author = {
+            id: 0,
+            username: '未知用户',
+            nickname: '未知用户',
+            avatar: '',
+            isFollowed: false
+          };
+        }
+
+        // 处理作者头像URL
+        if (post.author && post.author.avatar) {
+          try {
+            post.author.avatar = processImageUrl(post.author.avatar);
+            console.info(`处理后的作者头像URL: ${post.author.avatar.substring(0, 50)}...`);
+          } catch (error) {
+            console.error(`处理作者头像URL失败: ${error instanceof Error ? error.message : String(error)}`);
+            // 确保avatar字段不为undefined
+            post.author.avatar = '';
+          }
+        }
+
+        // 处理图片URLs
+        if (!post.imageUrls) {
+          post.imageUrls = [];
+        }
+        
+        if (post.images) {
+          try {
+            if (typeof post.images === 'string' && post.images.trim() !== '') {
+              post.imageUrls = post.images.split(',')
+                .filter(url => url && url.trim() !== '')
+                .map((url: string) => processImageUrl(url));
+              console.info(`处理后的图片URLs: ${post.imageUrls.length}张`);
+            } else if (Array.isArray(post.images)) {
+              post.imageUrls = post.images.map((url: string) => processImageUrl(url));
+              console.info(`图片URLs数组: ${post.imageUrls.length}张`);
+            } else {
+              console.info(`无图片数据`);
+            }
+          } catch (error) {
+            console.error(`处理图片URL失败: ${error instanceof Error ? error.message : String(error)}`);
+            post.imageUrls = [];
+          }
+        } else {
+          console.info(`帖子无图片字段`);
+        }
+        
         return post;
       });
   } catch (error) {
@@ -1432,5 +1503,128 @@ export function getUserById(userId: number): Promise<UserInfo> {
   } catch (error) {
     console.error(`获取用户信息失败: ${error instanceof Error ? error.message : String(error)}`);
     throw new Error(`获取用户信息失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 获取用户帖子列表
+ * 
+ * @param userId 用户ID
+ * @param page 页码
+ * @param size 每页大小
+ * @returns 帖子列表分页数据
+ */
+export function getUserPosts(userId: number, page: number = 0, size: number = 10): Promise<PageResponse<Post>> {
+  try {
+    console.info(`获取用户帖子列表, userId: ${userId}, page: ${page}, size: ${size}`);
+    
+    const params: RequestData = {
+      page,
+      pageSize: size,
+      authorId: userId // 使用authorId作为参数筛选特定用户的帖子
+    };
+    
+    // 获取当前用户ID用于检查关注状态和点赞状态
+    const userSession = UserSession.getInstance();
+    const currentUserId = userSession.isLoggedIn() ? userSession.getUserId() : undefined;
+    
+    if (currentUserId) {
+      params.currentUserId = currentUserId;
+    }
+    
+    return request<PostApiResponse>(RequestMethod.GET, '/posts', params as QueryParams)
+      .then((apiResponse) => {
+        console.info(`收到用户帖子列表响应`);
+        
+        // 检查API响应是否有效
+        if (!apiResponse || !apiResponse.data || !apiResponse.data.posts) {
+          console.error('无效的API响应格式');
+          const emptyResponse: PageResponse<Post> = {
+            content: [],
+            totalElements: 0,
+            totalPages: 0,
+            size: size,
+            number: page,
+            first: true,
+            last: true
+          };
+          return emptyResponse;
+        }
+        
+        // 将API响应转换为PageResponse格式
+        const pageResponse: PageResponse<Post> = {
+          content: apiResponse.data.posts || [],
+          totalElements: apiResponse.data.totalItems || 0,
+          totalPages: apiResponse.data.totalPages || 0,
+          size: size,
+          number: apiResponse.data.currentPage || 0,
+          first: (apiResponse.data.currentPage || 0) === 0,
+          last: (apiResponse.data.currentPage || 0) >= (apiResponse.data.totalPages || 1) - 1
+        };
+        
+        // 处理数据，确保posts数组中的每个元素都有imageUrls字段
+        if (pageResponse.content) {
+          pageResponse.content.forEach(post => {
+            // 确保每个post对象都有imageUrls属性
+            if (!post.imageUrls) {
+              post.imageUrls = [];
+            }
+            
+            // 将后端返回的images字符串转换为前端需要的imageUrls数组
+            if (post.images) {
+              try {
+                // 安全处理：始终将images视为可能是任何类型，并转换为字符串
+                let imagesString = '';
+                
+                // 处理各种可能的类型情况
+                if (typeof post.images === 'string') {
+                  imagesString = post.images;
+                } else if (Array.isArray(post.images)) {
+                  // 兼容处理：如果后端返回了数组（这不应该发生，但为了防御性编程）
+                  imagesString = String(post.images);
+                } else if (post.images) {
+                  imagesString = String(post.images);
+                }
+                
+                // 安全地处理字符串
+                if (imagesString && imagesString.trim && imagesString.trim() !== '') {
+                  const urls = imagesString.trim().split(',');
+                  // 处理图片URL，确保能在当前环境正确访问
+                  post.imageUrls = urls.filter(url => url && typeof url === 'string' && url.trim() !== '')
+                    .map(url => processImageUrl(url));
+                }
+              } catch (error) {
+                console.error(`处理帖子图片时出错: ${error instanceof Error ? error.message : String(error)}`);
+                post.imageUrls = []; // 出错时确保imageUrls是空数组
+              }
+            }
+            
+            // 处理作者关注状态
+            if (post.author && post.author.id) {
+              // 如果后端已返回isFollowed状态，使用它
+              // 否则先默认为false，后续可能需要单独查询
+              if (post.author.isFollowed === undefined) {
+                post.author.isFollowed = false;
+              }
+            }
+          });
+        }
+        
+        console.info(`用户帖子列表数据处理完成，共${pageResponse.content.length}条记录`);
+        return pageResponse;
+      });
+  } catch (error) {
+    console.error(`获取用户帖子列表失败: ${error instanceof Error ? error.message : String(error)}`);
+    // 返回一个空的但结构完整的响应，避免UI崩溃
+    const emptyResponse: PageResponse<Post> = {
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      size: size,
+      number: page,
+      first: true,
+      last: true
+    };
+    return Promise.resolve(emptyResponse);
   }
 }

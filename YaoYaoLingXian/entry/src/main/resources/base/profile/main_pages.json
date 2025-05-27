@@ -13,6 +13,7 @@
     "pages/community/PostDetailPage",
     "pages/personal/FollowersPage",
     "pages/personal/FollowingsPage",
-    "pages/personal/UserDetailPage"
+    "pages/personal/UserDetailPage",
+    "pages/personal/UserPostsPage"
   ]
 } 

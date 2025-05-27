@@ -161,4 +161,22 @@ public class PostVO {
     public void setAuthorFollowed(boolean authorFollowed) {
         this.authorFollowed = authorFollowed;
     }
+    
+    /**
+     * 设置作者信息
+     * 
+     * @param author 作者信息
+     */
+    public void setAuthor(UserVO author) {
+        this.author = author;
+    }
+    
+    /**
+     * 获取作者信息
+     * 
+     * @return 作者信息
+     */
+    public UserVO getAuthor() {
+        return this.author;
+    }
 } 

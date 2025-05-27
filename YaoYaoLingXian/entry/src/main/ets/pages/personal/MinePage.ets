@@ -34,8 +34,9 @@ export struct MinePage {
     taskCompletionRate: 0
   };
 
-  @State menuItems: string[] = ['进度记录', '收藏资源', '消息通知', '设置', '帮助与反馈'];
-  @State menuRoutes: string[] = ['progress', 'favorites', 'notifications', 'settings', 'help'];
+  @State menuItems: string[] = ['我的动态', '进度记录', '收藏资源', '消息通知', '设置', '帮助与反馈'];
+  @State menuIcons: Array<Resource> = [$r('app.media.ic_dynamic'), $r('app.media.ic_progress'), $r('app.media.ic_favorite'), $r('app.media.ic_message'), $r('app.media.ic_setting'), $r('app.media.ic_help')];
+  @State menuRoutes: string[] = ['myPosts', 'progress', 'favorites', 'notifications', 'settings', 'help'];
   @State loading: boolean = false;
   @State dataError: string = '';
   private userSession: UserSession = UserSession.getInstance();
@@ -158,6 +159,37 @@ export struct MinePage {
       }
     } catch (error) {
       console.error(`显示退出确认框失败: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  // 处理菜单项点击
+  handleMenuItemClick(index: number) {
+    console.info(`Navigate to ${this.menuRoutes[index]}`);
+    
+    // 根据不同的菜单项执行不同的路由跳转
+    switch(this.menuRoutes[index]) {
+      case 'myPosts':
+        // 跳转到我的动态页面
+        router.pushUrl({
+          url: 'pages/personal/UserPostsPage',
+          params: {
+            userId: this.userInfo.id,
+            username: this.userInfo.username,
+            nickname: this.userInfo.nickname
+          }
+        });
+        break;
+      case 'progress':
+      case 'favorites':
+      case 'notifications':
+      case 'settings':
+      case 'help':
+        // 其他页面暂未实现，显示提示
+        promptAction.showToast({
+          message: `${this.menuItems[index]}功能正在开发中`,
+          duration: 2000
+        });
+        break;
     }
   }
 
@@ -368,7 +400,7 @@ export struct MinePage {
             ForEach(this.menuItems, (item: string, index: number) => {
               ListItem() {
                 Row() {
-                  Image(AppIcons.settings)
+                  Image(this.menuIcons[index])
                     .width(24)
                     .height(24)
                     .fillColor($r('app.color.text_primary'))
@@ -389,8 +421,8 @@ export struct MinePage {
                 .alignItems(VerticalAlign.Center)
               }
               .onClick(() => {
-                // 路由跳转逻辑
-                console.info(`Navigate to ${this.menuRoutes[index]}`);
+                // 使用处理函数处理点击事件
+                this.handleMenuItemClick(index);
               })
             })
           }
