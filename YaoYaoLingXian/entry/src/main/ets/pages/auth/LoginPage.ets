@@ -350,56 +350,6 @@ export struct LoginPage {
           .borderRadius(16)
           .backgroundColor('rgba(255, 255, 255, 0.9)')
           
-          // 其他登录方式
-          Column() {
-            Text('或使用以下方式登录')
-              .fontSize(14)
-              .fontColor('#888')
-              .margin({ top: 30, bottom: 20 })
-            
-            Row({ space: 24 }) {
-              // 微信登录按钮
-              Stack() {
-                Circle()
-                  .width(50)
-                  .height(50)
-                  .backgroundColor(Color.White)
-                  .shadow({ radius: 4, color: 'rgba(0, 0, 0, 0.1)', offsetX: 0, offsetY: 2 })
-                
-                Image($r('app.media.ic_wechat'))
-                  .width(28)
-                  .height(28)
-              }
-              
-              // 手机登录按钮
-              Stack() {
-                Circle()
-                  .width(50)
-                  .height(50)
-                  .backgroundColor(Color.White)
-                  .shadow({ radius: 4, color: 'rgba(0, 0, 0, 0.1)', offsetX: 0, offsetY: 2 })
-                
-                Image($r('app.media.ic_mobile'))
-                  .width(28)
-                  .height(28)
-              }
-              
-              // 邮箱登录按钮
-              Stack() {
-                Circle()
-                  .width(50)
-                  .height(50)
-                  .backgroundColor(Color.White)
-                  .shadow({ radius: 4, color: 'rgba(0, 0, 0, 0.1)', offsetX: 0, offsetY: 2 })
-                
-                Image($r('app.media.ic_email'))
-                  .width(28)
-                  .height(28)
-              }
-            }
-          }
-          .margin({ top: 20, bottom: 20 })
-          
           // 注册提示
           Row() {
             Text('还没有账号？')

@@ -3,6 +3,7 @@ import * as ApiService from '../../services/ApiService';
 import router from '@ohos.router';
 import promptAction from '@ohos.promptAction';
 import { MyLoadingProgress } from '../../components/LoadingProgress';
+import { UserSession } from '../../utils/auth/UserSession';
 
 // 定义常量
 const FONT_SIZE_SMALL: number = 14;
@@ -16,6 +17,12 @@ interface RouteParams {
   userId: number;
   username?: string;
   nickname?: string;
+}
+
+// 定义操作结果接口
+interface OperationResult {
+  index: number;
+  message?: string;
 }
 
 @Entry
@@ -34,8 +41,11 @@ export struct UserPostsPage {
   @State noDataText: string = '暂无动态内容';
   @State isLogin: boolean = false;
   @State isLoading: boolean = true; // 初始加载状态
+  @State isCurrentUser: boolean = false; // 是否为当前登录用户查看自己的动态
+  @State isDeleting: boolean = false; // 是否正在删除帖子
 
   private scroller: Scroller = new Scroller();
+  private userSession: UserSession = UserSession.getInstance();
 
   aboutToAppear() {
     // 获取路由参数
@@ -47,7 +57,13 @@ export struct UserPostsPage {
       this.username = params.username || '';
       this.nickname = params.nickname || this.username || '用户';
       
-      // 加载数据 - 直接调用loadData方法而不预先设置isLoading
+      // 检查是否为当前登录用户查看自己的动态
+      if (this.userSession.isLoggedIn()) {
+        this.isCurrentUser = this.userId === this.userSession.getUserId();
+        console.info(`是否为当前用户查看自己的动态: ${this.isCurrentUser}`);
+      }
+      
+      // 加载数据
       this.loadData(true);
     } else {
       this.errorMsg = '无效的用户ID';
@@ -92,8 +108,8 @@ export struct UserPostsPage {
       // 清除错误信息
       this.errorMsg = '';
     } catch (error) {
-      console.error(`加载用户动态失败: ${error}`);
-      this.errorMsg = `加载失败: ${error}`;
+      console.error(`加载用户动态失败: ${error instanceof Error ? error.message : String(error)}`);
+      this.errorMsg = `加载失败: ${error instanceof Error ? error.message : String(error)}`;
     } finally {
       this.isLoading = false;
       this.isRefreshing = false;
@@ -119,6 +135,147 @@ export struct UserPostsPage {
       return;
     }
     this.loadData(false);
+  }
+  
+  /**
+   * 显示帖子操作菜单
+   */
+  showOperationMenu(post: Post) {
+    if (!this.isCurrentUser || !post || !post.id) return;
+    
+    // 避免在删除操作进行时再次显示菜单
+    if (this.isDeleting) return;
+    
+    // 使用提示对话框模拟操作菜单
+    // 鸿蒙OS ArkTS API 15 不支持showActionSheet，使用showDialog替代
+    promptAction.showDialog({
+      title: '帖子操作',
+      message: post.title || '选择要执行的操作',
+      buttons: [
+        {
+          text: '编辑',
+          color: '#1976d2'
+        },
+        {
+          text: '删除',
+          color: '#FF4757'
+        },
+        {
+          text: '取消',
+          color: '#666666'
+        }
+      ]
+    })
+    .then((result: OperationResult) => {
+      // 根据按钮索引执行不同操作
+      switch (result.index) {
+        case 0: // 编辑
+          this.navigateToEditPost(post);
+          break;
+        case 1: // 删除
+          this.showDeleteConfirm(post);
+          break;
+        default: // 取消
+          break;
+      }
+    })
+    .catch((err: Error) => {
+      console.error('操作菜单显示失败:', err.message);
+    });
+  }
+  
+  /**
+   * 显示删除确认对话框
+   */
+  showDeleteConfirm(post: Post) {
+    if (!post || !post.id) return;
+    
+    promptAction.showDialog({
+      title: '确认删除',
+      message: '确定要删除这条动态吗？删除后将无法恢复。',
+      buttons: [
+        {
+          text: '取消',
+          color: '#666666'
+        },
+        {
+          text: '删除',
+          color: '#FF4757'
+        }
+      ]
+    })
+    .then((result: OperationResult) => {
+      if (result.index === 1) { // 点击了删除按钮
+        this.deletePost(post.id);
+      }
+    })
+    .catch((err: Error) => {
+      console.error('删除确认对话框显示失败:', err.message);
+    });
+  }
+  
+  /**
+   * 删除帖子
+   */
+  async deletePost(postId: number) {
+    if (!postId) return;
+    
+    try {
+      this.isDeleting = true;
+      
+      // 调用API删除帖子
+      const result = await ApiService.deletePost(postId);
+      
+      if (result) {
+        // 删除成功，提示用户
+        promptAction.showToast({
+          message: '删除成功',
+          duration: 2000
+        });
+        
+        // 从当前列表中移除被删除的帖子
+        this.posts = this.posts.filter(post => post.id !== postId);
+        
+        // 如果删除后列表为空，显示空状态
+        if (this.posts.length === 0) {
+          this.noDataText = '暂无动态内容';
+        }
+      } else {
+        // 删除失败
+        promptAction.showToast({
+          message: '删除失败，请重试',
+          duration: 2000
+        });
+      }
+    } catch (error) {
+      console.error(`删除帖子失败: ${error instanceof Error ? error.message : String(error)}`);
+      
+      // 显示错误提示
+      promptAction.showToast({
+        message: `删除失败: ${error instanceof Error ? error.message : String(error)}`,
+        duration: 2000
+      });
+    } finally {
+      this.isDeleting = false;
+    }
+  }
+  
+  /**
+   * 跳转到编辑帖子页面
+   */
+  navigateToEditPost(post: Post) {
+    if (!post || !post.id) return;
+    
+    router.pushUrl({
+      url: 'pages/community/PostEditPage',
+      params: { 
+        postId: post.id,
+        title: post.title || '',
+        content: post.content || '',
+        imageUrls: post.imageUrls || [],
+        dreamId: post.dream?.id || null
+      }
+    });
   }
 
   /**
@@ -149,6 +306,18 @@ export struct UserPostsPage {
         .alignItems(HorizontalAlign.Start)
         .margin({ left: 10 })
         .layoutWeight(1)
+        
+        // 操作菜单按钮 - 仅当是当前用户查看自己的动态时显示
+        if (this.isCurrentUser && post.id) {
+          Text('⋮')
+            .fontSize(24)
+            .fontWeight(FontWeight.Bold)
+            .onClick((event) => {
+              // 在鸿蒙OS ArkTS API15中，ClickEvent没有stopPropagation方法
+              // 使用合成事件或其他方法隔离点击事件
+              this.showOperationMenu(post);
+            })
+        }
       }
       .width('100%')
       .padding(PADDING_MEDIUM)

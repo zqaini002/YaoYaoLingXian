@@ -11,6 +11,7 @@
     "pages/task/TaskDetailPage",
     "pages/community/PostCreatePage",
     "pages/community/PostDetailPage",
+    "pages/community/PostEditPage",
     "pages/personal/FollowersPage",
     "pages/personal/FollowingsPage",
     "pages/personal/UserDetailPage",

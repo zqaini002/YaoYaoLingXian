@@ -1628,3 +1628,74 @@ export function getUserPosts(userId: number, page: number = 0, size: number = 10
     return Promise.resolve(emptyResponse);
   }
 }
+
+/**
+ * 更新帖子
+ * 
+ * @param postId 要更新的帖子ID
+ * @param postData 要更新的帖子数据
+ * @returns 更新后的帖子
+ */
+export async function updatePost(postId: number, postData: RequestData): Promise<Post> {
+  try {
+    console.info(`更新帖子, postId: ${postId}, postData:`, JSON.stringify(postData));
+    
+    // 检查参数
+    if (!postId) {
+      throw new Error('更新帖子失败: 帖子ID不能为空');
+    }
+    
+    // 将imageUrls数组转换为后端需要的images字符串格式
+    if (postData.imageUrls && Array.isArray(postData.imageUrls) && postData.imageUrls.length > 0) {
+      postData.images = postData.imageUrls.join(',');
+    }
+    
+    // 发送更新请求
+    const updatedPost = await request<Post>(RequestMethod.PUT, `/posts/${postId}`, {}, postData);
+    console.info('更新帖子成功', JSON.stringify(updatedPost));
+    
+    // 处理图片URL数组，确保updatedPost具有imageUrls字段
+    if (updatedPost && updatedPost.images && !updatedPost.imageUrls) {
+      const imagesStr = String(updatedPost.images);
+      if (imagesStr && imagesStr.trim() !== '') {
+        const urls = imagesStr.trim().split(',');
+        updatedPost.imageUrls = urls.filter(url => url && url.trim() !== '')
+          .map(url => processImageUrl(url));
+      } else {
+        updatedPost.imageUrls = [];
+      }
+    }
+    
+    return updatedPost;
+  } catch (error) {
+    console.error(`更新帖子失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`更新帖子失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 删除帖子
+ * 
+ * @param postId 要删除的帖子ID
+ * @returns 删除成功返回true
+ */
+export async function deletePost(postId: number): Promise<boolean> {
+  try {
+    console.info(`删除帖子, postId: ${postId}`);
+    
+    // 检查参数
+    if (!postId) {
+      throw new Error('删除帖子失败: 帖子ID不能为空');
+    }
+    
+    // 发送删除请求
+    const response = await request<ApiResponse<void>>(RequestMethod.DELETE, `/posts/${postId}`);
+    console.info('删除帖子响应:', JSON.stringify(response));
+    
+    // 检查响应是否成功
+    return response && response.code === 200;
+  } catch (error) {
+    console.error(`删除帖子失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`删除帖子失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
