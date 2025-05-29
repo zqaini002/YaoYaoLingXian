@@ -46,6 +46,29 @@ interface RouteParams {
   dreamId?: number;
 }
 
+// 上传图片参数接口
+interface UploadImageParams {
+  base64: string;
+  type?: string;
+}
+
+// 上传图片响应接口
+interface UploadImageResponse {
+  url: string;
+  success: boolean;
+  message?: string;
+}
+
+// 帖子更新数据接口
+interface PostUpdateData {
+  userId: number;
+  title: string;
+  content: string;
+  dreamId?: number;
+  imageUrls: string[];
+  status: number;
+}
+
 // 常量定义
 const FONT_SIZE_SMALL: number = 14;
 const FONT_SIZE_NORMAL: number = 16;
@@ -82,6 +105,7 @@ export struct PostEditPage {
   @State showDreamSelector: boolean = false;
   @State userDreams: Dream[] = [];
   @State isLoadingDreams: boolean = false;
+  @State selectedDreamId: number | undefined = undefined; // 添加selectedDreamId属性
   private userSession: UserSession = UserSession.getInstance();
 
   aboutToAppear() {
@@ -343,29 +367,65 @@ export struct PostEditPage {
   }
   
   /**
-   * 提交帖子更新
+   * 上传图片到服务器
+   * @param imageUris 图片URI列表
+   * @returns 上传后的图片URL列表
    */
-  async submitPost() {
+  private async uploadImages(imageUris: string[]): Promise<string[]> {
     try {
-      // 检查用户是否已登录
-      if (!this.userSession.isLoggedIn()) {
+      const uploadPromises: Promise<string>[] = [];
+      
+      // 处理每个图片
+      for (let i = 0; i < imageUris.length; i++) {
+        const uri = imageUris[i];
+        // 转换为Base64
+        const base64 = await this.convertImageToBase64(uri);
+        if (base64) {
+          // 使用ApiService中定义的接口类型
+          const uploadParams: ApiService.UploadImageParams = {
+            base64Image: base64,
+            fileName: `image_${Date.now()}.jpg`
+          };
+          
+          const uploadPromise = ApiService.uploadImage(uploadParams)
+            .then((result) => {
+              // 正确使用返回的URL
+              return result.url;
+            })
+            .catch((error: Error) => {
+              console.error(`上传图片失败: ${error.message}`);
+              return '';
+            });
+          
+          uploadPromises.push(uploadPromise);
+        }
+      }
+      
+      // 等待所有上传完成
+      const results = await Promise.all(uploadPromises);
+      // 过滤掉空字符串
+      return results.filter(url => url !== '');
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error(`上传图片过程中发生错误: ${err.message}`);
+      return [];
+    }
+  }
+
+  /**
+   * 提交修改
+   */
+  async submitEdit() {
+    try {
+      if (!this.post.title || this.post.title.trim() === '') {
         promptAction.showToast({
-          message: '请先登录后再编辑',
+          message: '标题不能为空',
           duration: 2000
-        });
-        // 跳转到登录页面
-        router.pushUrl({
-          url: 'pages/user/LoginPage',
-          params: {
-            redirectUrl: 'pages/community/PostEditPage',
-            postId: this.post.id
-          }
         });
         return;
       }
-
-      // 表单验证
-      if (!this.post.content.trim()) {
+      
+      if (!this.post.content || this.post.content.trim() === '') {
         promptAction.showToast({
           message: '内容不能为空',
           duration: 2000
@@ -374,99 +434,69 @@ export struct PostEditPage {
       }
       
       this.isSubmitting = true;
-      console.info('开始提交帖子更新，标题：', this.post.title || '无标题');
+      console.info(`开始提交帖子更新，标题： ${this.post.title}`);
       
-      // 确保设置了用户ID
-      this.post.userId = this.userSession.getUserId() || 0;
+      // 处理图片：结合原始保留的图片和新选择的图片
+      let finalImageUrls: string[] = [];
       
-      // 处理图片更新
-      let uploadedImages: string[] = [];
-      
-      // 获取保留的原始图片
-      const remainingOriginalImages: string[] = [];
+      // 添加保留的原始图片
       for (let i = 0; i < this.originalImageUrls.length; i++) {
         const url = this.originalImageUrls[i];
         if (!this.removedImageUrls.includes(url)) {
-          remainingOriginalImages.push(url);
+          finalImageUrls.push(url);
         }
       }
       
-      // 添加保留的原始图片到上传列表
-      for (let i = 0; i < remainingOriginalImages.length; i++) {
-        uploadedImages.push(remainingOriginalImages[i]);
-      }
-      
-      // 如果有新选择的图片，需要先上传图片
+      // 处理新选择的图片
       if (this.selectedImages.length > 0) {
-        console.info(`开始上传新选择的图片，数量: ${this.selectedImages.length}`);
-        
-        // 遍历上传图片
-        for (const imageUri of this.selectedImages) {
-          try {
-            console.info(`处理图片: ${imageUri}`);
-            let base64Data = await this.convertImageToBase64(imageUri);
-            
-            if (base64Data) {
-              // 构造上传参数
-              const uploadParams: ApiService.UploadImageParams = {
-                fileName: imageUri.substring(imageUri.lastIndexOf('/') + 1),
-                base64Image: base64Data
-              };
-              
-              console.info('上传图片参数准备完成，开始上传...');
-              const response = await ApiService.uploadImage(uploadParams);
-            
-              if (response && response.url) {
-                console.info(`图片上传成功，URL: ${response.url}`);
-                uploadedImages.push(response.url);
-              } else {
-                console.error('图片上传返回结果异常:', response);
-              }
-            }
-          } catch (error) {
-            const err: Error = error instanceof Error ? error : new Error(String(error));
-            console.error(`上传图片失败: ${err.message}`);
-            promptAction.showToast({
-              message: `图片上传失败: ${err.message}`,
-              duration: 2000
-            });
+        // 上传新图片
+        const uploadedUrls = await this.uploadImages(this.selectedImages);
+        if (uploadedUrls && uploadedUrls.length > 0) {
+          // 使用循环逐个添加，而非展开运算符
+          for (let i = 0; i < uploadedUrls.length; i++) {
+            finalImageUrls.push(uploadedUrls[i]);
           }
         }
       }
       
-      console.info(`图片处理完成，最终图片数量: ${uploadedImages.length}`);
+      console.info(`图片处理完成，最终图片数量: ${finalImageUrls.length}`);
       
-      // 创建要更新的帖子数据
-      const postData: ApiService.RequestData = {
+      // 准备更新数据，使用ApiService中的RequestData类型
+      const updateData: ApiService.RequestData = {
         userId: this.post.userId,
         title: this.post.title,
         content: this.post.content,
-        dreamId: this.post.dreamId,
-        // 图片处理
-        imageUrls: uploadedImages
+        dreamId: this.selectedDreamId || this.post.dreamId,
+        imageUrls: finalImageUrls,
+        status: 1 // 确保状态字段设置为有效值
       };
       
-      console.info('准备提交更新数据:', JSON.stringify(postData));
+      console.info(`准备提交更新数据: ${JSON.stringify(updateData)}`);
       
       // 调用API更新帖子
-      const updatedPost = await ApiService.updatePost(this.post.id, postData);
-      console.info('帖子更新成功:', updatedPost);
+      const updatedPost = await ApiService.updatePost(this.post.id, updateData);
       
       promptAction.showToast({
         message: '更新成功',
         duration: 2000
       });
       
-      // 返回上一页
-      router.back();
+      // 返回上一页，并传递更新后的数据
+      router.back({
+        url: 'pages/community/PostDetailPage',
+        params: {
+          postId: this.post.id,
+          updated: true
+        }
+      });
       
     } catch (error) {
-      const err: Error = error instanceof Error ? error : new Error(String(error));
-      console.error(`更新失败: ${err.message}`);
+      const errorMsg = error instanceof Error ? error.message : String(error);
       promptAction.showToast({
-        message: `更新失败: ${err.message}`,
+        message: `更新失败: ${errorMsg}`,
         duration: 2000
       });
+      console.error(`更新失败: ${errorMsg}`);
     } finally {
       this.isSubmitting = false;
     }
@@ -616,7 +646,7 @@ export struct PostEditPage {
             .borderRadius(RADIUS_NORMAL)
             .enabled(!this.isSubmitting && !this.isLoading)
             .onClick(() => {
-              this.submitPost();
+              this.submitEdit();
             })
         }
         .width('100%')

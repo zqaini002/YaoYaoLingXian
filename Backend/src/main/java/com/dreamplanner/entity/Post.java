@@ -1,5 +1,8 @@
 package com.dreamplanner.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -33,10 +36,12 @@ public class Post implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference(value = "user-posts")
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dream_id")
+    @JsonBackReference(value = "dream-posts")
     private Dream dream;
 
     @Column(name = "title", nullable = false, length = 100)
@@ -69,9 +74,13 @@ public class Post implements Serializable {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference(value = "post-comments")
+    @JsonIgnore
     private Set<Comment> comments = new HashSet<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference(value = "post-likes")
+    @JsonIgnore
     private Set<Like> likes = new HashSet<>();
 
     /**

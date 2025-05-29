@@ -56,8 +56,31 @@ public class PostController {
             }
 
             Post savedPost = postService.createPost(post);
-            log.info("创建帖子成功：{}", savedPost);
-            return ApiResponse.success(savedPost);
+            
+            // 创建简化的返回对象，避免循环引用
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", savedPost.getId());
+            response.put("title", savedPost.getTitle());
+            response.put("content", savedPost.getContent());
+            response.put("images", savedPost.getImages());
+            response.put("status", savedPost.getStatus());
+            response.put("viewCount", savedPost.getViewCount());
+            response.put("likeCount", savedPost.getLikeCount());
+            response.put("commentCount", savedPost.getCommentCount());
+            response.put("createdAt", savedPost.getCreatedAt());
+            response.put("updatedAt", savedPost.getUpdatedAt());
+            
+            // 添加必要的关联ID
+            if (savedPost.getUser() != null) {
+                response.put("userId", savedPost.getUser().getId());
+            }
+            
+            if (savedPost.getDream() != null) {
+                response.put("dreamId", savedPost.getDream().getId());
+            }
+            
+            log.info("创建帖子成功：{}", savedPost.getId());
+            return ApiResponse.success(response);
         } catch (Exception e) {
             log.error("创建帖子失败", e);
             return ApiResponse.error("创建帖子失败：" + e.getMessage());
@@ -131,9 +154,59 @@ public class PostController {
             }
 
             post.setId(postId);
+            
+            // 获取当前认证用户
+            org.springframework.security.core.Authentication authentication = 
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            
+            // 如果有有效的认证信息，获取用户并设置到post对象中
+            if (authentication != null && authentication.isAuthenticated() && 
+                !"anonymousUser".equals(authentication.getPrincipal())) {
+                String username = authentication.getName();
+                User user = userService.getUserByUsername(username).toUser();
+                if (user != null) {
+                    post.setUser(user);
+                    log.info("已将认证用户 ID={} 设置到更新的帖子中", user.getId());
+                }
+            } else {
+                // 如果没有认证信息，检查是否传入了userId
+                if (post.getUser() == null || post.getUser().getId() == null) {
+                    log.info("未提供有效的user信息，将依赖后端service从原始帖子获取");
+                }
+            }
+            
+            // 确保status不为null
+            if (post.getStatus() == null) {
+                post.setStatus(1); // 默认设置为正常状态
+                log.info("在控制器中设置默认status=1，确保不会出现null值错误");
+            }
+            
             Post updatedPost = postService.updatePost(post);
             log.info("更新帖子成功：{}", updatedPost);
-            return ApiResponse.success(updatedPost);
+            
+            // 创建简化的返回对象，仅包含必要字段
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", updatedPost.getId());
+            response.put("title", updatedPost.getTitle());
+            response.put("content", updatedPost.getContent());
+            response.put("images", updatedPost.getImages());
+            response.put("status", updatedPost.getStatus());
+            response.put("viewCount", updatedPost.getViewCount());
+            response.put("likeCount", updatedPost.getLikeCount());
+            response.put("commentCount", updatedPost.getCommentCount());
+            response.put("createdAt", updatedPost.getCreatedAt());
+            response.put("updatedAt", updatedPost.getUpdatedAt());
+            
+            // 添加必要的关联ID
+            if (updatedPost.getUser() != null) {
+                response.put("userId", updatedPost.getUser().getId());
+            }
+            
+            if (updatedPost.getDream() != null) {
+                response.put("dreamId", updatedPost.getDream().getId());
+            }
+            
+            return ApiResponse.success(response);
         } catch (Exception e) {
             log.error("更新帖子失败", e);
             return ApiResponse.error("更新帖子失败：" + e.getMessage());

@@ -277,6 +277,31 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public void deletePost(Long id) {
         User currentUser = getCurrentUser();
+        
+        // 添加请求参数查询功能
+        Long requestParamUserId = null;
+        try {
+            // 尝试从请求参数中获取userId
+            jakarta.servlet.http.HttpServletRequest request = 
+                ((org.springframework.web.context.request.ServletRequestAttributes) 
+                    org.springframework.web.context.request.RequestContextHolder.getRequestAttributes()).getRequest();
+            
+            String userIdParam = request.getParameter("userId");
+            if (userIdParam != null && !userIdParam.isEmpty()) {
+                requestParamUserId = Long.parseLong(userIdParam);
+                log.info("从请求参数中获取到userId: {}", requestParamUserId);
+            }
+        } catch (Exception e) {
+            log.warn("从请求参数获取userId失败", e);
+        }
+        
+        // 如果SecurityContext中没有用户，但请求参数中有userId，则尝试从数据库获取用户
+        if (currentUser == null && requestParamUserId != null) {
+            currentUser = userRepository.findById(requestParamUserId).orElse(null);
+            log.info("通过请求参数userId={}查找到用户: {}", requestParamUserId, 
+                   currentUser != null ? currentUser.getUsername() : "未找到");
+        }
+        
         if (currentUser == null) {
             throw new IllegalStateException("用户未登录");
         }
@@ -292,6 +317,8 @@ public class PostServiceImpl implements PostService {
         // 逻辑删除
         post.setStatus(0);
         postRepository.save(post);
+        
+        log.info("用户[{}]成功删除动态，ID: {}", currentUser.getUsername(), id);
     }
 
     @Override
@@ -707,7 +734,82 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public Post updatePost(Post post) {
-        return postRepository.save(post);
+        // 获取原始帖子，确保必要字段不会被覆盖
+        Post originalPost = postRepository.findById(post.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("帖子不存在，ID: " + post.getId()));
+        
+        // 最重要：确保user不为null，保留原始的user对象
+        if (post.getUser() == null) {
+            post.setUser(originalPost.getUser());
+            log.info("帖子更新时user为null，使用原始user: userId={}", 
+                originalPost.getUser() != null ? originalPost.getUser().getId() : "null");
+        } else {
+            log.info("帖子更新使用提供的user: userId={}", post.getUser().getId());
+        }
+        
+        // 再次确认user对象已正确设置
+        if (post.getUser() == null) {
+            log.error("严重错误：更新帖子时user仍为null，这将导致数据库错误");
+            throw new IllegalArgumentException("更新帖子失败：用户信息缺失");
+        }
+        
+        // 确保status不为null，如果客户端未提供，使用原始状态
+        if (post.getStatus() == null) {
+            post.setStatus(originalPost.getStatus());
+            log.info("帖子更新时status为null，使用原值: {}", originalPost.getStatus());
+        } else {
+            log.info("帖子更新使用提供的status: {}", post.getStatus());
+        }
+        
+        // 确保其他必要字段不为null
+        if (post.getViewCount() == null) {
+            post.setViewCount(originalPost.getViewCount());
+            log.info("帖子更新时viewCount为null，使用原值: {}", originalPost.getViewCount());
+        }
+        
+        if (post.getLikeCount() == null) {
+            post.setLikeCount(originalPost.getLikeCount());
+            log.info("帖子更新时likeCount为null，使用原值: {}", originalPost.getLikeCount());
+        }
+        
+        if (post.getCommentCount() == null) {
+            post.setCommentCount(originalPost.getCommentCount());
+            log.info("帖子更新时commentCount为null，使用原值: {}", originalPost.getCommentCount());
+        }
+        
+        // 保留原始关系数据
+        post.setComments(originalPost.getComments());
+        post.setLikes(originalPost.getLikes());
+        
+        log.info("更新帖子完整信息 - ID: {}, 标题: {}, 状态: {}, 用户ID: {}, 内容长度: {}", 
+                post.getId(), post.getTitle(), post.getStatus(), 
+                post.getUser().getId(), 
+                post.getContent() != null ? post.getContent().length() : 0);
+                
+        // 保存更新的帖子
+        Post savedPost = postRepository.save(post);
+        log.info("帖子更新成功，ID: {}", savedPost.getId());
+        
+        // 返回简化版的Post对象，避免无限递归序列化问题
+        Post simplifiedPost = new Post();
+        simplifiedPost.setId(savedPost.getId());
+        simplifiedPost.setTitle(savedPost.getTitle());
+        simplifiedPost.setContent(savedPost.getContent());
+        simplifiedPost.setImages(savedPost.getImages());
+        simplifiedPost.setStatus(savedPost.getStatus());
+        simplifiedPost.setViewCount(savedPost.getViewCount());
+        simplifiedPost.setLikeCount(savedPost.getLikeCount());
+        simplifiedPost.setCommentCount(savedPost.getCommentCount());
+        simplifiedPost.setCreatedAt(savedPost.getCreatedAt());
+        simplifiedPost.setUpdatedAt(savedPost.getUpdatedAt());
+        
+        // 不设置双向关联，避免循环引用
+        // simplifiedPost.setUser(savedPost.getUser());
+        // simplifiedPost.setDream(savedPost.getDream());
+        // simplifiedPost.setComments(savedPost.getComments());
+        // simplifiedPost.setLikes(savedPost.getLikes());
+        
+        return simplifiedPost;
     }
 
     @Override

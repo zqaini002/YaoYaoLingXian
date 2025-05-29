@@ -1,5 +1,7 @@
 package com.dreamplanner.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -45,6 +47,7 @@ public class User implements Serializable {
      * 密码
      */
     @Column(nullable = false)
+    @JsonIgnore
     private String password;
 
     @Column(name = "nickname", length = 50)
@@ -108,21 +111,31 @@ public class User implements Serializable {
     }
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference(value = "user-dreams")
+    @JsonIgnore
     private Set<Dream> dreams = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference(value = "user-tasks")
+    @JsonIgnore
     private Set<Task> tasks = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference(value = "user-posts")
+    @JsonIgnore
     private Set<Post> posts = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference(value = "user-comments")
+    @JsonIgnore
     private Set<Comment> comments = new HashSet<>();
 
     @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<Follow> following = new HashSet<>();
 
     @OneToMany(mappedBy = "followed", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<Follow> followers = new HashSet<>();
 
     /**

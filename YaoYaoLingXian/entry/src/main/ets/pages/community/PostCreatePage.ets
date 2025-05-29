@@ -174,6 +174,19 @@ export struct PostCreatePage {
         promptAction.showToast(toastOpts);
         return;
       }
+
+      // 检查是否关联了梦想
+      if (!this.post.dreamId) {
+        const toastOpts: ToastOptions = { 
+          message: '请关联一个梦想后再发布',
+          duration: 2000
+        };
+        promptAction.showToast(toastOpts);
+        
+        // 可选：自动弹出梦想选择器
+        this.showDreamSelector = true;
+        return;
+      }
       
       this.isSubmitting = true;
       console.info('开始提交帖子，标题：', this.post.title || '无标题');
@@ -448,6 +461,26 @@ export struct PostCreatePage {
               this.post.content = value;
             })
           
+          // 关联梦想提示
+          if (!this.post.dreamId) {
+            Row() {
+              Image(AppIcons.error)
+                .width(16)
+                .height(16)
+                .fillColor('#FF4757')
+                .margin({ right: 4 })
+              Text('发布动态需要关联一个梦想，点击下方的"关联梦想"按钮进行选择')
+                .fontSize(CommonConstants.FONT_SIZE_SMALL)
+                .fontColor('#FF4757')
+                .fontStyle(FontStyle.Italic)
+            }
+            .width('100%')
+            .padding(8)
+            .backgroundColor('#FFEEEE')
+            .borderRadius(CommonConstants.RADIUS_SMALL)
+            .margin({ top: CommonConstants.MARGIN_NORMAL })
+          }
+          
           // 图片展示区
           if (this.selectedImages.length > 0) {
             Grid() {
@@ -566,11 +599,14 @@ export struct PostCreatePage {
             Image(AppIcons.tag)
               .width(24)
               .height(24)
-              .fillColor('#666666')
+              .fillColor(this.post.dreamId ? '#666666' : '#FF4757')
             Text('关联梦想')
               .fontSize(CommonConstants.FONT_SIZE_SMALL)
-              .fontColor('#666666')
+              .fontColor(this.post.dreamId ? '#666666' : '#FF4757')
               .margin({ left: 4 })
+            Text(' *')
+              .fontSize(CommonConstants.FONT_SIZE_SMALL)
+              .fontColor('#FF4757')
           }
           .onClick(() => {
             this.showDreamSelector = true;
@@ -689,14 +725,23 @@ export struct PostCreatePage {
           .layoutWeight(1)
           
           // 确认按钮
-          Button('确定')
+          Button(this.post.dreamId ? '确定' : '请选择一个梦想')
             .width('90%')
             .height(48)
-            .backgroundColor($r('app.color.primary_color'))
+            .backgroundColor(this.post.dreamId ? $r('app.color.primary_color') : '#CCCCCC')
             .borderRadius(CommonConstants.RADIUS_NORMAL)
             .margin({ top: CommonConstants.MARGIN_MEDIUM, bottom: CommonConstants.MARGIN_LARGE })
+            .enabled(this.post.dreamId !== undefined)
             .onClick(() => {
-              this.showDreamSelector = false;
+              if (this.post.dreamId) {
+                this.showDreamSelector = false;
+              } else {
+                const toastOpts: ToastOptions = { 
+                  message: '请选择一个梦想再确认',
+                  duration: 2000
+                };
+                promptAction.showToast(toastOpts);
+              }
             })
         }
         .width('100%')

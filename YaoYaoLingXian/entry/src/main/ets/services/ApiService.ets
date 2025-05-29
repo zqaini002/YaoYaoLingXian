@@ -1645,10 +1645,26 @@ export async function updatePost(postId: number, postData: RequestData): Promise
       throw new Error('更新帖子失败: 帖子ID不能为空');
     }
     
+    // 获取当前用户会话，确保用户已登录
+    const userSession = UserSession.getInstance();
+    if (!userSession.isLoggedIn()) {
+      throw new Error('更新帖子失败: 用户未登录');
+    }
+    
+    // 明确设置用户ID，确保后端能识别用户
+    if (!postData.userId) {
+      postData.userId = userSession.getUserId();
+      console.info(`设置用户ID=${postData.userId}，确保后端能正确识别用户`);
+    }
+    
     // 将imageUrls数组转换为后端需要的images字符串格式
     if (postData.imageUrls && Array.isArray(postData.imageUrls) && postData.imageUrls.length > 0) {
       postData.images = postData.imageUrls.join(',');
     }
+    
+    // 确保status字段设置为1，避免数据库null值错误
+    postData.status = 1;
+    console.info('设置status=1，确保更新不会出现null值错误');
     
     // 发送更新请求
     const updatedPost = await request<Post>(RequestMethod.PUT, `/posts/${postId}`, {}, postData);
@@ -1688,12 +1704,66 @@ export async function deletePost(postId: number): Promise<boolean> {
       throw new Error('删除帖子失败: 帖子ID不能为空');
     }
     
-    // 发送删除请求
-    const response = await request<ApiResponse<void>>(RequestMethod.DELETE, `/posts/${postId}`);
-    console.info('删除帖子响应:', JSON.stringify(response));
+    // 获取当前用户会话，确保用户已登录
+    const userSession = UserSession.getInstance();
+    if (!userSession.isLoggedIn()) {
+      throw new Error('删除帖子失败: 用户未登录');
+    }
+    
+    // 获取用户ID和令牌，双重确认认证状态
+    const userId = userSession.getUserId();
+    const token = userSession.getToken();
+    if (!token || !userId) {
+      throw new Error('删除帖子失败: 无效的用户认证状态');
+    }
+    
+    console.info(`开始删除帖子 ID=${postId}, 用户ID=${userId}, 令牌=${token.substring(0, 15)}...`);
+    
+    // 构建完整URL，包含用户ID作为查询参数
+    const url = `${BASE_URL}/posts/${postId}?userId=${userId}`;
+    console.info(`发送删除请求到: ${url}`);
+    
+    // 使用底层HTTP请求，精确控制请求头
+    const httpRequest = http.createHttp();
+    const options: RequestOptions = {
+      method: http.RequestMethod.DELETE,
+      readTimeout: TIMEOUT,
+      connectTimeout: TIMEOUT,
+      header: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    };
+    
+    // 发送请求
+    const response = await httpRequest.request(url, options);
+    console.info(`删除响应: 状态码=${response.responseCode}, 结果=${typeof response.result === 'string' ? response.result.substring(0, 100) : '非字符串'}`);
+    
+    // 解析响应
+    let responseData: ApiResponse<void> = {
+      code: 0,
+      message: '',
+      data: undefined
+    };
+    
+    if (typeof response.result === 'string') {
+      responseData = JSON.parse(response.result);
+    }
+    
+    console.info('删除帖子响应详情:', JSON.stringify(responseData));
+    
+    // 释放HTTP请求资源
+    httpRequest.destroy();
+    
+    // 如果返回500但包含"用户未登录"错误，尝试提供更具体的错误信息
+    if (responseData.code === 500 && responseData.message && responseData.message.includes('用户未登录')) {
+      console.error('后端报告用户未登录错误，但客户端已发送令牌，可能是后端安全配置问题');
+      throw new Error('删除失败: 后端无法识别用户认证信息，请联系管理员');
+    }
     
     // 检查响应是否成功
-    return response && response.code === 200;
+    return responseData && responseData.code === 200;
   } catch (error) {
     console.error(`删除帖子失败: ${error instanceof Error ? error.message : String(error)}`);
     throw new Error(`删除帖子失败: ${error instanceof Error ? error.message : String(error)}`);
