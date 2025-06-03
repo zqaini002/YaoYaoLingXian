@@ -181,6 +181,10 @@ export interface RequestData {
   nickname?: string;
   email?: string;
   phone?: string;
+  signature?: string; // 添加个性签名字段
+  avatar?: string; // 添加头像字段
+  gender?: number; // 添加性别字段
+  birthday?: string; // 添加生日字段
   
   // 新增参数
   currentUserId?: number;
@@ -1767,5 +1771,46 @@ export async function deletePost(postId: number): Promise<boolean> {
   } catch (error) {
     console.error(`删除帖子失败: ${error instanceof Error ? error.message : String(error)}`);
     throw new Error(`删除帖子失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * 更新用户信息
+ * 
+ * @param userId 用户ID
+ * @param userInfo 更新的用户信息
+ * @returns 更新后的用户信息
+ */
+export async function updateUser(userId: number, userInfo: UserInfo): Promise<UserInfo> {
+  try {
+    console.info(`更新用户信息, userId: ${userId}`);
+    
+    // 转换为符合RequestData类型的对象，避免传递未在接口中定义的属性
+    const requestData: RequestData = {};
+    
+    // 只包含需要更新的字段
+    if (userInfo.nickname !== undefined) requestData.nickname = userInfo.nickname;
+    if (userInfo.email !== undefined) requestData.email = userInfo.email;
+    if (userInfo.phone !== undefined) requestData.phone = userInfo.phone;
+    if (userInfo.avatar !== undefined) requestData.avatar = userInfo.avatar;
+    if (userInfo.signature !== undefined) requestData.signature = userInfo.signature;
+    if (userInfo.gender !== undefined) requestData.gender = userInfo.gender;
+    if (userInfo.birthday !== undefined) requestData.birthday = userInfo.birthday;
+    
+    console.info(`更新用户数据: ${JSON.stringify(requestData)}`);
+    
+    // 调用API更新用户信息
+    const updatedUser = await request<UserInfo>(
+      RequestMethod.PUT,
+      `/users/${userId}`,
+      EmptyParams,
+      requestData
+    );
+    
+    console.info('用户信息更新成功');
+    return updatedUser;
+  } catch (error) {
+    console.error(`更新用户信息失败: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`更新用户信息失败: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

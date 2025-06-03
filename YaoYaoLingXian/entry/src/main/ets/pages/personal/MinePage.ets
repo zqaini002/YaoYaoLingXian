@@ -240,6 +240,11 @@ export struct MinePage {
                 .borderRadius(CommonConstants.RADIUS_SMALL)
                 .height(32)
                 .width(80)
+                .onClick(() => {
+                  router.pushUrl({
+                    url: 'pages/personal/ProfileEditPage'
+                  });
+                })
             }
             .width('100%')
             .alignItems(VerticalAlign.Center)

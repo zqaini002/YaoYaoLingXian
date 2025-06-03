@@ -15,6 +15,7 @@
     "pages/personal/FollowersPage",
     "pages/personal/FollowingsPage",
     "pages/personal/UserDetailPage",
-    "pages/personal/UserPostsPage"
+    "pages/personal/UserPostsPage",
+    "pages/personal/ProfileEditPage"
   ]
 } 

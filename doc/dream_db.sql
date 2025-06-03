@@ -11,13 +11,12 @@
  Target Server Version : 80042 (8.0.42)
  File Encoding         : 65001
 
- Date: 25/05/2025 02:41:28
+ Date: 03/06/2025 23:59:09
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
-CREATE DATABASE dream_db;
-use dream_db;
+
 -- ----------------------------
 -- Table structure for comment
 -- ----------------------------
@@ -82,7 +81,7 @@ CREATE TABLE `dream`  (
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
   INDEX `idx_category`(`category` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 23 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '梦想目标表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 24 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '梦想目标表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of dream
@@ -95,6 +94,7 @@ INSERT INTO `dream` VALUES (5, 4, '写一本小说', '完成一部8万字以上�
 INSERT INTO `dream` VALUES (6, 4, '学习摄影', '系统学习摄影技巧，能够拍摄专业级风景和人像作品', '艺术', 2, 1, 40.00, '2024-10-31', 240, 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, '2025-05-16 15:42:50', '2025-05-25 01:57:09');
 INSERT INTO `dream` VALUES (7, 5, '创业开公司', '创办一家专注于健康饮食的初创公司', '职业', 1, 1, 10.00, '2025-06-30', 730, 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 0, '2025-05-16 15:42:50', '2025-05-25 01:57:09');
 INSERT INTO `dream` VALUES (8, 5, '学习烹饪', '学习中餐、西餐和日料的基本烹饪技巧', '生活技能', 3, 1, 30.00, '2024-05-31', 180, 'https://images.unsplash.com/photo-1556910103-1c02745aae4d', 1, '2025-05-16 15:42:50', '2025-05-16 15:42:50');
+INSERT INTO `dream` VALUES (23, 1, 'jy', '', '学习', 3, 1, 0.00, '2025-06-29', 30, 'http://10.0.2.2:8080/api/files/common/20250530/0b67077a-897a-40af-b928-6d6f0ee3e96f.jpg', 1, '2025-05-30 01:27:12', '2025-05-30 01:27:12');
 
 -- ----------------------------
 -- Table structure for dream_resource
@@ -177,7 +177,7 @@ CREATE TABLE `flyway_schema_history`  (
   `success` tinyint(1) NOT NULL,
   PRIMARY KEY (`installed_rank`) USING BTREE,
   INDEX `flyway_schema_history_s_idx`(`success` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of flyway_schema_history
@@ -215,7 +215,6 @@ INSERT INTO `follow` VALUES (10, 5, 2, '2025-05-16 15:42:50');
 INSERT INTO `follow` VALUES (11, 5, 3, '2025-05-16 15:42:50');
 INSERT INTO `follow` VALUES (12, 5, 4, '2025-05-16 15:42:50');
 INSERT INTO `follow` VALUES (13, 1, 4, '2025-05-25 02:36:17');
-INSERT INTO `follow` VALUES (14, 1, 2, '2025-05-25 02:40:52');
 
 -- ----------------------------
 -- Table structure for like
@@ -230,7 +229,7 @@ CREATE TABLE `like`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `idx_post_user`(`post_id` ASC, `user_id` ASC) USING BTREE,
   UNIQUE INDEX `idx_comment_user`(`comment_id` ASC, `user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 31 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '点赞表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 32 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '点赞表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of like
@@ -260,7 +259,7 @@ INSERT INTO `like` VALUES (23, 5, NULL, 2, '2025-05-16 15:42:50');
 INSERT INTO `like` VALUES (24, 5, NULL, 4, '2025-05-16 15:42:50');
 INSERT INTO `like` VALUES (25, NULL, 15, 5, '2025-05-16 15:42:50');
 INSERT INTO `like` VALUES (26, NULL, 16, 5, '2025-05-16 15:42:50');
-INSERT INTO `like` VALUES (30, 1, NULL, 1, '2025-05-24 23:14:47');
+INSERT INTO `like` VALUES (31, 1, NULL, 1, '2025-05-27 19:03:16');
 
 -- ----------------------------
 -- Table structure for post
@@ -283,16 +282,18 @@ CREATE TABLE `post`  (
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_dream_id`(`dream_id` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '社区动态表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '社区动态表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of post
 -- ----------------------------
-INSERT INTO `post` VALUES (1, 2, 1, '开始我的英语学习之旅', '今天正式开始我的英语学习计划，希望一年后能够流利地用英语交流。我制定了详细的学习计划，包括单词背诵、听力训练和口语练习。加油！', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, 76, 16, 4, '2025-05-16 15:42:50', '2025-05-25 02:02:08');
+INSERT INTO `post` VALUES (1, 2, 1, '开始我的英语学习之旅', '今天正式开始我的英语学习计划，希望一年后能够流利地用英语交流。我制定了详细的学习计划，包括单词背诵、听力训练和口语练习。加油！', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, 78, 16, 4, '2025-05-16 15:42:50', '2025-05-27 19:03:16');
 INSERT INTO `post` VALUES (2, 2, 2, '马拉松训练第一周', '这周开始了马拉松训练，虽然只是每次跑5公里，但已经让我感到有些吃力。不过，坚持就是胜利，我相信通过系统训练，一定能在明年完成全程马拉松！', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, 43, 9, 2, '2025-05-16 15:42:50', '2025-05-25 02:02:09');
 INSERT INTO `post` VALUES (3, 3, 3, 'Python学习笔记分享', '学习Python已经两个月了，今天分享一些我的学习笔记和心得。编程真的很有趣，解决问题的过程让人很有成就感。附上我写的一些代码示例，希望对同样学习Python的朋友有帮助。', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, 86, 20, 5, '2025-05-16 15:42:50', '2025-05-25 02:02:10');
 INSERT INTO `post` VALUES (4, 4, 6, '我的摄影进阶之路', '开始系统学习摄影一个月了，从最基础的相机参数到构图技巧，每天都有新收获。分享几张我最近拍摄的作品，虽然还很业余，但已经能看到一些进步。期待未来能拍出更好的作品！', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, 55, 13, 4, '2025-05-16 15:42:50', '2025-05-25 02:02:10');
 INSERT INTO `post` VALUES (5, 5, 8, '烹饪学习第一课：基础刀工', '今天上了烹饪课的第一堂课，学习了基础刀工。才知道原来切菜也是一门学问！分享一些学到的技巧：1. 握刀姿势要正确；2. 切菜要保持稳定的节奏；3. 不同食材需要不同的切法。明天将学习简单的炒菜技巧，很期待！', 'http://10.0.2.2:8080/api/files/common/20250520/9e4162bc-a56b-4110-8de0-d9024780d40f.jpg', 1, 37, 8, 2, '2025-05-16 15:42:50', '2025-05-25 02:02:11');
+INSERT INTO `post` VALUES (7, 1, 23, 'fdaf', 'fdaf', 'http://10.0.2.2:8080/api/files/common/20250530/2499f792-595c-4127-848e-d7597367472e.jpg', 0, 1, 0, 0, '2025-05-30 01:27:34', '2025-05-30 01:41:58');
+INSERT INTO `post` VALUES (8, 1, NULL, 'gfdf也一样ttttfdfffnijia', 'gfsg', NULL, 0, 7, 0, 0, '2025-05-30 01:42:12', '2025-05-30 02:15:51');
 
 -- ----------------------------
 -- Table structure for progress
